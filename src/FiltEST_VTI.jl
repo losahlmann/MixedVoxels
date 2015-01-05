@@ -147,6 +147,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	for dataarray in vti.voxeldata
 		# TODO: http://docs.julialang.org/en/release-0.3/manual/strings/#id3
 		# http://docs.julialang.org/en/release-0.3/stdlib/base/#strings
+		# base64encodepipe
 		write(file, dataarray[2].data)
 	end
 

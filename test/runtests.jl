@@ -13,8 +13,10 @@ a = Mt["Fluid"]
 
 # TEST type DataArray
 material = DataArray(Material, 1, fill(Mt["Fluid"], 3, 3, 7))
+material.data[:,:,1:3] = Mt["Inflow"]
+println(filter(x->x==Mt["Inflow"],material.data))
 #material.data = 
-#println(material)
+println(material)
 println(size(material.data))
 println(length(material.data))
 
