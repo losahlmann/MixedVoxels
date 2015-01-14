@@ -1,6 +1,6 @@
 module FiltEST_VTI
 
-using Zlib
+import Zlib
 
 export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file
 
@@ -18,21 +18,23 @@ export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file
 # FIXME: UInt16 in *.vti als Dataarray type string nötig?
 typealias Material Uint16
 
-Mt = Dict{ASCIIString, Material}(
-	{"Solid" => 0,
+Mt = Dict{ASCIIString, Material}({
+	"Solid" => 0,
 	"Fluid" => 5,
 	"Porous" => 10,
 	"Inflow" => 60,
 	"Outflow" => 80,
-	"Wall" => 101}) #FIXME: Symmetry, 0 no slip?
+	"Wall" => 101
+}) #FIXME: Symmetry, 0 no slip?
 
-MtName = Dict{Material, ASCIIString}(
-	{ 0 => "Solid",
+MtName = Dict{Material, ASCIIString}({
+	0 => "Solid",
 	5 => "Fluid",
 	10 => "Porous",
 	60 => "Inflow",
 	80 => "Outflow",
-	101 => "Wall"})
+	101 => "Wall"
+})
 
 
 # DataArray
@@ -79,7 +81,7 @@ end
 function get_material_count(vti::FiltEST_VTIFile)
 
 	# access material data
-	# FIXME
+	# TODO: use try/catch for file handling
 	#try
 		materialdata = vti.voxeldata["Material"].data
 	#catch e
@@ -145,56 +147,56 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	blocksize = 32768
 	offset = 0
 
-	for dataarray in vti.voxeldata
+	for (name, dataarray) in vti.voxeldata
 		# calculate data size in bytes
-		datasize = length(dataarray[2].data)*sizeof(dataarray[2].datatype)
+		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 
 		if zip
 			# prepare data to be written compressed
 
 			# clear
-			dataarray[2].datacompressed = []
-			dataarray[2].compressedblocksizes = []
+			dataarray.datacompressed = []
+			dataarray.compressedblocksizes = []
 
 			# chop data into blocks
-			dataarray[2].numberofblocks = floor(datasize/blocksize)
+			dataarray.numberofblocks = floor(datasize/blocksize)
 
 			# remainder
-			dataarray[2].lastblocksize = datasize % blocksize
+			dataarray.lastblocksize = datasize % blocksize
 
-			if dataarray[2].lastblocksize != 0
+			if dataarray.lastblocksize != 0
 				# count last block as well
-				dataarray[2].numberofblocks += 1
+				dataarray.numberofblocks += 1
 			else
 				# there is only one block
-				dataarray[2].lastblocksize = blocksize
+				dataarray.lastblocksize = blocksize
 			end
 
-			for i in 1:dataarray[2].numberofblocks
+			for i in 1:dataarray.numberofblocks
 				# compress each block
-				if i == dataarray[2].numberofblocks
+				if i == dataarray.numberofblocks
 					# last block
-					block = uint8(vec(dataarray[2].data))[(i-1)*blocksize+1:end]
+					block = uint8(vec(dataarray.data))[(i-1)*blocksize+1:end]
 				else	
-					block = uint8(vec(dataarray[2].data))[(i-1)*blocksize+1:i*blocksize]
+					block = uint8(vec(dataarray.data))[(i-1)*blocksize+1:i*blocksize]
 				end
 				println(block)
 				compressedblock = Zlib.compress(block, 6)
 
 				# note size of compressed block in bytes
 				println(length(compressedblock))
-				push!(dataarray[2].compressedblocksizes, length(compressedblock))
+				push!(dataarray.compressedblocksizes, length(compressedblock))
 
 				# count bytes for offset
 				datasize += length(compressedblock)
 
 				# save compressed block
-				push!(dataarray[2].datacompressed, compressedblock)
+				push!(dataarray.datacompressed, compressedblock)
 			end
 		end
 
 		# write tag
-		write(file, """\t\t\t<DataArray type="$(dataarray[2].datatype)" Name="$(dataarray[1])" NumberOfComponents="$(dataarray[2].components)" format="appended" offset="$offset"/>\n""")
+		write(file, """\t\t\t<DataArray type="$(dataarray.datatype)" Name="$name" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
 		
 		# count bytes for offset
 		offset += datasize
@@ -205,7 +207,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	</ImageData>
 	<AppendedData encoding="raw">_""")
 
-	for dataarray in vti.voxeldata
+	for (name, dataarray) in vti.voxeldata
 		# TODO: http://docs.julialang.org/en/release-0.3/manual/strings/#id3
 		# http://docs.julialang.org/en/release-0.3/stdlib/base/#strings
 		# base64encodepipe
@@ -215,23 +217,23 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
 
 			# write number of blocks
-			write(file, uint32(dataarray[2].numberofblocks))
+			write(file, uint32(dataarray.numberofblocks))
 
 			# write block size before compression
 			write(file, uint32(blocksize))
 
 			# write last block size
-			write(file, uint32(dataarray[2].lastblocksize))
+			write(file, uint32(dataarray.lastblocksize))
 
 			# write sizes of compressed blocks
-			write(file, dataarray[2].compressedblocksizes)
+			write(file, dataarray.compressedblocksizes)
 
 			# write compressed data
-			write(file, dataarray[2].datacompressed)
+			write(file, dataarray.datacompressed)
 		else
-			datasize = length(dataarray[2].data)*sizeof(dataarray[2].datatype)
+			datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 			write(file, uint32(datasize))
-			write(file, dataarray[2].data)
+			write(file, dataarray.data)
 		end
 	end
 

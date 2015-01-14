@@ -1,7 +1,11 @@
-include("utils.jl")
-include("Permeability.jl")
+using Permeability
 using FiltEST_VTI
 using MixedVoxels
+
+include("utils.jl")
+
+# TODO: config-file als Parameter
+# TODO: lese TOML config-file mit Konstanten und Optionen (Tabelle, Plot)
 
 # global variables
 
@@ -10,6 +14,9 @@ const K_0 = 7.0e-6
 
 # solid volume fraction in porous media
 const Phi_0_ = 0.1
+
+# minimum volume fraction for mixed voxel
+const eps = 1e-3
 
 # dimension of a voxel
 const dVoxel = 0.4
@@ -38,12 +45,16 @@ const Nzt = Nz + 2 * NWall
 # add layers for inlet and outlet in flow direction
 const Nxt = Nx + 2 * NWall + NInlet + NOutlet
 
+# TODO: for winkel in winkels
+
 # read input parameters
 theta = deg2rad(90)
 phi = deg2rad(0)
 
-# K_JJ, K_xi, fill, remove
-# mode = K_xi
+# TODO: for mode in modes
+
+# TODO: modes K_JJ, K_xi, fill, remove
+mixedvoxel = modes["K_xi"]
 
 # convert angles to rad
 
@@ -58,8 +69,8 @@ housing.spacing = dVoxel
 # creta data arrays
 material = DataArray(Material, 1, fill(Mt["Wall"], Nxt, Nyt, Nzt))
 
-# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar?
-permeability = DataArray(Float64, 6, fill(0.5e-6, Nxt, Nyt, Nzt))
+# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar? Nein
+permeability = DataArray(Float64, 6, fill(1.0, Nxt, Nyt, Nzt))
 
 # add fluid area
 material.data[NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall:Nzt-NWall] = Mt["Fluid"]
@@ -103,34 +114,44 @@ for z in 1:Nz
 			dist1 = (dot(x0, n_p) - d1) / dVoxel
 			dist2 = (dot(x0, n_p) - d2) / dVoxel
 
-			# intersect Voxel with first plane
-			# "-" because plane is moved against normal direction
-			intersectionpoints = intersection_points(n_p, -dist1)
+			# intersect Voxel with first and second plane
+			for d in (dist1, dist2)
+				# "-" because plane is moved against normal direction
+				intersectionpoints = intersection_points(n_p, -d)
 
-			# calculate volume fraction
-			if length(intersectionpoints) > 0
-				# calculate volume fraction
-				xi = 1 - volumefraction(intersectionpoints, n_p, -dist1)
+				# treat mixed voxels
+				if length(intersectionpoints) > 0
+					# calculate volume fraction
+					xi = 1 - volumefraction(intersectionpoints, n_p, -d)
 
-				if (xi) # TODO
-					# fluid voxel
-				elseif (xi)
-					# mixed porous voxel
-				else
-					# full porous voxel
+					if xi > 1-eps
+						# fluid voxel
+						material.data[x,y,z] = Mt["Fluid"]
+						continue
+					elseif xi > eps
+						# mixed porous voxel
+						m, p = mixedvoxel(xi)
+						material.data[x,y,z] = m
+						permeability.data[x,y,z] = p
+						continue
+					else
+						# full porous voxel
+						material.data[x,y,z] = Mt["Porous"]
+						permeability.data[x,y,z] = K_0
+						continue
+					end
 				end
 			end
 
-			# intersection with second plane
-			intersectionpoints = intersection_points(n_p, -dist2)
-
-			# calculate volume fraction
-
 			# voxel is entirely contained in filter medium: full porous voxel
-			if dot(center, n_p)-d1 < 0 && dot(center, n_p)-d2 > 0
+			if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
+				material.data[x,y,z] = Mt["Porous"]
+				permeability.data[x,y,z] = K_0
+				continue
 			end
 
 			# else voxel is fluid
+			material.data[x,y,z] = Mt["Fluid"]
 		end
 	end
 end
@@ -156,3 +177,9 @@ write(solfile, filter(x -> x < 1.0, permeability.data))
 
 # close file
 close(solfile)
+
+# TODO: change FiltEST-Config-XML
+
+# TODO: call FiltEST
+
+# TODO: save results

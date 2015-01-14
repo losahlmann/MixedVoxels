@@ -191,7 +191,8 @@ function flow(n_i, A, n_p, d)
 		elseif n_i == [0, 0,-1]
 			return n_p[1]/n_p[3]*(0.5-0.5*g_x(0,0,n_p,d)^2)
 		elseif n_i == n_p return A
-		else return 0.0 end
+		else return 0.0
+		end
 	
 	# case n_p.z == 0
 	# v=(x+1/n_1, -n_1/n_2*x, 0)
@@ -205,7 +206,8 @@ function flow(n_i, A, n_p, d)
 		elseif n_i == [0, 0, 1] return 0.0
 		elseif n_i == [0, 0,-1] return 0.0
 		elseif n_i == n_p return A
-		else return 0.0 end
+		else return 0.0
+		end
 	
 	# general case, n_p.y != 0 and n_p.z != 0
 	# FIXME: noch altes Vektorfeld v=(x, -n_1/n_2*x, 1/n_3), updaten auf obiges
@@ -217,7 +219,8 @@ function flow(n_i, A, n_p, d)
 		elseif n_i == [0, 1, 0] return Tx(n_p, d, 1) # integrate
 		elseif n_i == [0,-1, 0] return -Tx(n_p, d, 0) # integrate
 		elseif n_i == n_p return A
-		else return 0.0	end
+		else return 0.0
+		end
 	end
 end
 
