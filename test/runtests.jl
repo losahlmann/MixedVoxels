@@ -20,14 +20,14 @@ a = Mt["Fluid"]
 # TODO: @test typeof(a) == UInt8
 
 # TEST type DataArray
-#material = DataArray(Material, 1, fill(Mt["Solid"], 7, 3, 3))
-#material.data[2:6,2,2] = Mt["Fluid"]
-#material.data[2,2,2] = Mt["Inflow"]
-#material.data[6,2,2] = Mt["Outflow"]
-#material.data[4,2,2] = Mt["Porous"]
+material = DataArray(Material, 1, fill(Mt["Solid"], 7, 3, 3))
+material.data[2:6,2,2] = Mt["Fluid"]
+material.data[2,2,2] = Mt["Inflow"]
+material.data[6,2,2] = Mt["Outflow"]
+material.data[4,2,2] = Mt["Porous"]
 
-#permeability = DataArray(Float64, 6, fill(1.0, 7, 3, 3))
-#permeability.data[4,2,2] = 7.0e-6
+permeability = DataArray(Float64, 6, fill(1.0, 7, 3, 3))
+permeability.data[4,2,2] = 7.0e-6
 
 
 #println(filter(x->x==Mt["Inflow"],material.data))
@@ -37,17 +37,17 @@ a = Mt["Fluid"]
 #println(length(material.data))
 
 # TEST creation of FiltEST-VTI-File
-#housing = FiltEST_VTIFile()
-#housing.origin = [-0.8, -0.4, -0.4]
-#housing.spacing = 0.4
+housing = FiltEST_VTIFile()
+housing.origin = [-0.8, -0.4, -0.4]
+housing.spacing = 0.4
 
-# FIXME: Reihenfolge in Data
-#add_data(housing, "Permeability", permeability)
 #material = DataArray(Material, 1, [Mt["Inflow"], Mt["Porous"], Mt["Outflow"]])
 
-#add_data(housing, "Material", material)
+# FIXME: Reihenfolge in Data
+add_data(housing, "Material", material)
+add_data(housing, "Permeability", permeability)
 
-#write_file(housing, "housing.vti", false)
+write_file(housing, "housing.vti", false)
 
 #solfile = open("savedK.sol", "w")
 #write(solfile, filter(x -> x < 1.0, permeability.data))

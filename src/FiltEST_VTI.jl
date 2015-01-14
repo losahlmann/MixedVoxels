@@ -138,9 +138,9 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	materialdata = vti.voxeldata["Material"].data
 	wholeextent = size(materialdata)
 
-	#write(file, """<ImageData WholeExtent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])" Origin="$(join(vti.origin, " "))" Spacing="$(strip(string(vti.spacing," ")^3))">
-	#<Piece Extent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])">
-	#	<CellData>\n""")
+	write(file, """<ImageData WholeExtent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])" Origin="$(join(vti.origin, " "))" Spacing="$(strip(string(vti.spacing," ")^3))">
+	<Piece Extent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])">
+		<CellData>\n""")
 
 	blocksize = 32768
 	offset = 0
@@ -172,10 +172,17 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 
 			for i in 1:dataarray[2].numberofblocks
 				# compress each block
-				block = uint8(vec(dataarray[2].data))
+				if i == dataarray[2].numberofblocks
+					# last block
+					block = uint8(vec(dataarray[2].data))[(i-1)*blocksize+1:end]
+				else	
+					block = uint8(vec(dataarray[2].data))[(i-1)*blocksize+1:i*blocksize]
+				end
+				println(block)
 				compressedblock = Zlib.compress(block, 6)
 
 				# note size of compressed block in bytes
+				println(length(compressedblock))
 				push!(dataarray[2].compressedblocksizes, length(compressedblock))
 
 				# count bytes for offset
@@ -210,14 +217,14 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 			# write number of blocks
 			write(file, uint32(dataarray[2].numberofblocks))
 
-			# write block size
+			# write block size before compression
 			write(file, uint32(blocksize))
 
 			# write last block size
 			write(file, uint32(dataarray[2].lastblocksize))
 
 			# write sizes of compressed blocks
-			write(dataarray[2].compressedblocksizes)
+			write(file, dataarray[2].compressedblocksizes)
 
 			# write compressed data
 			write(file, dataarray[2].datacompressed)
