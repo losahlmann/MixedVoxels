@@ -1,47 +1,49 @@
+include("utils.jl")
+include("Permeability.jl")
 using FiltEST_VTI
 using MixedVoxels
-using Permeability
 
 # global variables
 
 # permeability of porous media in mm^-2
-K_0 = 7.0e-6
+const K_0 = 7.0e-6
 
 # solid volume fraction in porous media
-Phi_0_ = 0.1
+const Phi_0_ = 0.1
 
 # dimension of a voxel
-dVoxel = 0.4
+const dVoxel = 0.4
 
 # dimensions of housing
-dX = 26.4
-dY = 8.0
-dZ = 8.0
-dFilter = 1.6
+const dX = 26.4
+const dY = 8.0
+const dZ = 8.0
+const dFilter = 1.6
 
 # sizes in number of voxels
-NWall = 2
-NInlet = 4
-NOutlet = 4
+const NWall = 2
+const NInlet = 4
+const NOutlet = 4
 
 # dimensions in voxels (without in-/outlet, wall)
 # TODO: Rundung
-Nx::Int64 = dX/dVoxel
-Ny::Int64 = dY/dVoxel
-Nz::Int64 = dZ/dVoxel
+const Nx = int64(dX/dVoxel)
+const Ny = int64(dY/dVoxel)
+const Nz = int64(dZ/dVoxel)
 
 # extensions of housing (with without in-/outlet, wall)
-Nxt = Nx + 2 * NWall
-Nyt = Ny + 2 * NWall
-Nzt = Nz + 2 * NWall
+const Nyt = Ny + 2 * NWall
+const Nzt = Nz + 2 * NWall
 
 # add layers for inlet and outlet in flow direction
-Nxt += NInlet + NOutlet
+const Nxt = Nx + 2 * NWall + NInlet + NOutlet
 
 # read input parameters
-theta
-phi
-mode
+theta = deg2rad(90)
+phi = deg2rad(0)
+
+# K_JJ, K_xi, fill, remove
+# mode = K_xi
 
 # convert angles to rad
 
@@ -55,8 +57,9 @@ housing.spacing = dVoxel
 
 # creta data arrays
 material = DataArray(Material, 1, fill(Mt["Wall"], Nxt, Nyt, Nzt))
-# TODO: Float64 vector
-permeability = DataArray(Float64, 6, fill(1.0, Nxt, Nyt, Nzt))
+
+# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar?
+permeability = DataArray(Float64, 6, fill(0.5e-6, Nxt, Nyt, Nzt))
 
 # add fluid area
 material.data[NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall:Nzt-NWall] = Mt["Fluid"]
@@ -143,7 +146,10 @@ write_file(housing, "housing.vti", false)
 # write SOL-File
 solfile = open("savedK.sol", "w")
 
-# TODO: write as binary (double->char)
+# MAYBE:
+#for k in filter(x -> x < 1.0, permeability.data)
+#	write(solfile, k)
+#end
 
 # write only permeability of porous voxels
 write(solfile, filter(x -> x < 1.0, permeability.data))

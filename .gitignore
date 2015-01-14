@@ -29,3 +29,10 @@
 
 # System
 .DS_Store
+
+# Sublime Text
+*.sublime*
+
+# Results
+*.vti
+*.sol
