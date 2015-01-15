@@ -2,7 +2,7 @@ module Permeability
 
 export K_xi, K_JJ, fill, remove
 
-modes = Dict{ASCIIString, Function}({
+const modes = Dict{ASCIIString, Function}({
 	"K_xi" = K_xi,
 	"K_JJ" = K_JJ,
 	"fill" = fill,

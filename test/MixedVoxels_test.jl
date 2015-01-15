@@ -1,63 +1,8 @@
-using Base.Test
-using FiltEST_VTI
 using MixedVoxels
 
-include("../src/utils.jl")
 
-
-
-#@test hello("Julia") == "Hello, Julia"
-#@test_approx_eq domath(2.0) 7.0
-
-# TEST utils.jl
-@test equalszero(2e-11)
-@test !equalszero(2e-10)
-
-# TEST type mt
-a = Mt["Fluid"]
-@test typeof(a) == Uint16
-@test typeof(a) == Material
-# TODO: @test typeof(a) == UInt8
-
-# TEST type DataArray
-material = DataArray(Material, 1, fill(Mt["Solid"], 7, 3, 3))
-material.data[2:6,2,2] = Mt["Fluid"]
-material.data[2,2,2] = Mt["Inflow"]
-material.data[6,2,2] = Mt["Outflow"]
-material.data[4,2,2] = Mt["Porous"]
-
-permeability = DataArray(Float64, 6, fill(1.0, 7, 3, 3))
-permeability.data[4,2,2] = 7.0e-6
-
-
-#println(filter(x->x==Mt["Inflow"],material.data))
-#material.data = 
-#println(material)
-#println(size(material.data))
-#println(length(material.data))
-
-# TEST creation of FiltEST-VTI-File
-housing = FiltEST_VTIFile()
-housing.origin = [-0.8, -0.4, -0.4]
-housing.spacing = 0.4
-
-#material = DataArray(Material, 1, [Mt["Inflow"], Mt["Porous"], Mt["Outflow"]])
-
-# FIXME: Reihenfolge in Data
-add_data(housing, "Material", material)
-add_data(housing, "Permeability", permeability)
-
-write_file(housing, "housing.vti", false)
-
-#solfile = open("savedK.sol", "w")
-#write(solfile, filter(x -> x < 1.0, permeability.data))
-#close(solfile)
-
-
-cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]}
-@test cubenormals[1] == [1.0,0.0,0.0]
-
-
+# TEST volumefraction()
+println("TEST volumefraction()")
 # Test 1: vol=0.5, 4 Schnittpunkte (sind Würfelecken),
 # bzw. Schnitt sind zwei diagonal gegenüberliegende Würfelkanten
 n_p = [-1/sqrt(2), 1/sqrt(2), 0]
@@ -124,8 +69,3 @@ d = 1.0/(4.0*sqrt(3))
 n_p = [-2/sqrt(17), 2/sqrt(17), 3/sqrt(17)]
 d = 1/sqrt(17)
 @test_approx_eq_eps volumefraction(MixedVoxels.intersection_points(n_p, d), n_p, d) 0.347222 1e-6
-
-# # cube presentation
-# n_p = [-1/sqrt(3), 1/sqrt(3), 1/sqrt(3)]
-# dist = 1/(2*sqrt(3))
-
