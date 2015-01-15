@@ -19,6 +19,7 @@ end
 @test equalszero(2e-11)
 @test !equalszero(2e-10)
 
+println(length(ARGS))
 
 
 

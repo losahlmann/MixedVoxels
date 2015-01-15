@@ -4,33 +4,15 @@ using MixedVoxels
 
 include("utils.jl")
 
-# TODO: config-file als Parameter
-# TODO: lese TOML config-file mit Konstanten und Optionen (Tabelle, Plot)
+# config-file as command line parameter
+if length(ARGS) == 0
+	config = "config.jl"
+else
+	config = ARGS[1]
+end
 
-# global variables
-
-# permeability of porous media in mm^-2
-const K_0 = 7.0e-6
-
-# solid volume fraction in porous media
-const Phi_0_ = 0.1
-
-# minimum volume fraction for mixed voxel
-const eps = 1e-3
-
-# dimension of a voxel
-const dVoxel = 0.4
-
-# dimensions of housing
-const dX = 26.4
-const dY = 8.0
-const dZ = 8.0
-const dFilter = 1.6
-
-# sizes in number of voxels
-const NWall = 2
-const NInlet = 4
-const NOutlet = 4
+# read config into global variables
+include(config)
 
 # dimensions in voxels (without in-/outlet, wall)
 # TODO: Rundung
