@@ -29,7 +29,6 @@ housing.spacing = 0.4
 
 #material = DataArray(Material, 1, [Mt["Inflow"], Mt["Porous"], Mt["Outflow"], Mt["Fluid"]])
 
-# FIXME: Reihenfolge in Data
 add_data(housing, "Material", material)
 add_data(housing, "Permeability", permeability)
 

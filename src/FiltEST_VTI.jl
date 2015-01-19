@@ -69,6 +69,7 @@ FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, DataArra
 
 # TODO: name::UTF8 möglich?
 function add_data(vti::FiltEST_VTIFile, name::ASCIIString, vd::DataArray)
+
 		# set name of DataArray
 		vd.name = name
 
@@ -78,7 +79,7 @@ end
 
 function get_data(vti::FiltEST_VTIFile, name::ASCIIString)
 	# return data of first DataArray in vti named "name"
-	return filter(x->x.name==name, vti.voxeldata)[1].data
+	return filter(x -> x.name == name, vti.voxeldata)[1].data
 end
 
 # get number of voxels of each material
@@ -141,16 +142,20 @@ end
 # write (compressed) voxel data
 function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 
+	# get extents of data
 	materialdata = get_data(vti, "Material")
 	wholeextent = size(materialdata)
 
+	# write dimensions of data
 	write(file, """<ImageData WholeExtent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])" Origin="$(join(vti.origin, " "))" Spacing="$(strip(string(vti.spacing," ")^3))">
 	<Piece Extent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])">
 		<CellData>\n""")
 
+	# in bytes
 	blocksize = 32768
 	offset = 0
 
+	# write tags for all DataArrays
 	for dataarray in vti.voxeldata
 
 		# write tag
@@ -159,9 +164,8 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 		# calculate data size in bytes
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 
+		# prepare data to be written compressed
 		if zip
-			# prepare data to be written compressed
-
 			# clear
 			dataarray.datacompressed = []
 			dataarray.compressedblocksizes = []
@@ -196,27 +200,31 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 				# note size of compressed block in bytes
 				push!(dataarray.compressedblocksizes, length(compressedblock))
 				
-				# count bytes for offset
+				# count bytes of compressed data block for offset
 				offset += length(compressedblock)
 
 				# save compressed block
 				push!(dataarray.datacompressed, compressedblock)
 			end
+		
+			# count bytes of head for offset
+			offset += (3+length(dataarray.compressedblocksizes))*sizeof(Uint32)
+		else
+			offset += datasize + 1
 		end
 
-		
-		# count bytes of head for offset
-		offset += (3+length(dataarray.compressedblocksizes))*sizeof(Uint32)
 	end
 
+	# close tags
 	write(file, """\t\t</CellData>
 		</Piece>
 	</ImageData>
 	<AppendedData encoding="raw">_""")
 
+	# write data of all DataArrays
 	for dataarray in vti.voxeldata
 		if zip
-			# header in UInt32 (==unsigned int)
+			# write head in UInt32 (==unsigned int)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
 
 			# write number of blocks
@@ -234,12 +242,14 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 			# write compressed data
 			write(file, dataarray.datacompressed)
 		else
+			# write uncompressed
 			datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 			write(file, uint32(datasize))
 			write(file, dataarray.data)
 		end
 	end
 
+	# close tag
 	write(file, "\n\t</AppendedData>")
 end
 
