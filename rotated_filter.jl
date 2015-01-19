@@ -144,7 +144,7 @@ add_data(housing, "Permeability", permeability)
 
 
 # write FiltEST_VTIFile
-write_file(housing, "housing.vti", false)
+write_file(housing, "housing.vti", zip)
 
 # write SOL-File
 solfile = open("savedK.sol", "w")

@@ -28,7 +28,10 @@ const phi = [0, 10, 20]
 #
 const mode =["K_JJ", "K_xi", "fill", "remove"]
 
-#
-const plot = false
+# compress VTI-file
+zip = true
 
-const table = true
+#
+plot = false
+
+table = true

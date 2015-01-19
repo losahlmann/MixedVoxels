@@ -148,6 +148,10 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	offset = 0
 
 	for (name, dataarray) in vti.voxeldata
+
+		# write tag
+		write(file, """\t\t\t<DataArray type="$(dataarray.datatype)" Name="$name" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
+
 		# calculate data size in bytes
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 
@@ -172,34 +176,33 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 				dataarray.lastblocksize = blocksize
 			end
 
+			# compress each block
 			for i in 1:dataarray.numberofblocks
-				# compress each block
+				# convert values into bytes
 				if i == dataarray.numberofblocks
 					# last block
-					block = uint8(vec(dataarray.data))[(i-1)*blocksize+1:end]
+					block = reinterpret(Uint8, vec(dataarray.data)[(i-1)*blocksize+1:end])
 				else	
-					block = uint8(vec(dataarray.data))[(i-1)*blocksize+1:i*blocksize]
+					block = reinterpret(Uint8, vec(dataarray.data)[(i-1)*blocksize+1:i*blocksize])
 				end
-				println(block)
+
+				# compress with standard compression level
 				compressedblock = Zlib.compress(block, 6)
 
 				# note size of compressed block in bytes
-				println(length(compressedblock))
 				push!(dataarray.compressedblocksizes, length(compressedblock))
-
+				
 				# count bytes for offset
-				datasize += length(compressedblock)
+				offset += length(compressedblock)
 
 				# save compressed block
 				push!(dataarray.datacompressed, compressedblock)
 			end
 		end
 
-		# write tag
-		write(file, """\t\t\t<DataArray type="$(dataarray.datatype)" Name="$name" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
 		
-		# count bytes for offset
-		offset += datasize
+		# count bytes of head for offset
+		offset += (3+length(dataarray.compressedblocksizes))*sizeof(Uint32)
 	end
 
 	write(file, """\t\t</CellData>
@@ -208,10 +211,6 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	<AppendedData encoding="raw">_""")
 
 	for (name, dataarray) in vti.voxeldata
-		# TODO: http://docs.julialang.org/en/release-0.3/manual/strings/#id3
-		# http://docs.julialang.org/en/release-0.3/stdlib/base/#strings
-		# base64encodepipe
-
 		if zip
 			# header in UInt32 (==unsigned int)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
