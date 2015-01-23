@@ -1,5 +1,6 @@
 module Permeability
 
+# TODO: modes K_JJ, K_xi, fill, remove
 export K_xi, K_JJ, fill, remove
 
 const modes = Dict{ASCIIString, Function}({

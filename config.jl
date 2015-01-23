@@ -1,14 +1,17 @@
+# FiltEST location
+const filtest="/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
+
 # permeability of porous media in mm^-2
 const K_0 = 7.0e-6
 
 # solid volume fraction in porous media
-const Phi_0_ = 0.1
+const Phi_0__ = [0.1, 0.2]
 
 # minimum volume fraction for mixed voxel
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel = 0.4
+const dVoxel_ = [0.4, 0.1]
 
 # dimensions of housing
 const dX = 26.4
@@ -22,11 +25,13 @@ const NInlet = 4
 const NOutlet = 4
 
 # read input parameters
-const theta = [90, 80, 70, 60, 50]
-const phi = [0, 10, 20]
+const theta_ = [90, 80, 70, 60, 50]
+const phi_ = [0, 10, 20]
 
 #
-const mode =["K_JJ", "K_xi", "fill", "remove"]
+const mode_ = {"0.4" => ["K_JJ", "K_xi", "fill", "remove"],
+				"0.1" => ["fill", "remove"]
+			}
 
 # compress VTI-file
 zip = true
