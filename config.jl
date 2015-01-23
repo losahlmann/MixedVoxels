@@ -40,3 +40,9 @@ zip = true
 plot = false
 
 table = true
+
+# filenames, need to be consistent with flowSimInput.xml
+# leave empty if no file should be written
+vtifilename = "housing.vti"
+solfilename = "savedK.sol"
+tablefilename = "results.txt"

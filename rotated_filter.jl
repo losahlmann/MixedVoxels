@@ -166,16 +166,21 @@ for Phi_0_ in Phi_0__, phi in phi_, theta in theta_, dVoxel in dVoxel_, mode in 
 
 
 	# write FiltEST-VTI-File
-	write_file(housing, "housing.vti", zip)
-
+	if vtifilename != ""
+		write_file(housing, vtifilename, zip)
+	end
+	
 	# write SOL-File
-	solfile = open("savedK.sol", "w")
+	if solfilename != ""
+		# create file
+		solfile = open(solfilename, "w")
 
-	# write only permeability of porous voxels
-	write(solfile, filter(x -> x < 1.0, permeability.data))
+		# write only permeability of porous voxels
+		write(solfile, filter(x -> x < 1.0, permeability.data))
 
-	# close file
-	close(solfile)
+		# close file
+		close(solfile)
+	end
 
 	# do simulation in FiltEST
 
@@ -237,10 +242,12 @@ for Phi_0_ in Phi_0__, phi in phi_, theta in theta_, dVoxel in dVoxel_, mode in 
 end # for
 
 # write table
-tablefile = open("results.txt", "w")
-# TODO: strip first line "10x2 DataFrame"
-write(tablefile, @show(table))
-close(tablefile)
+if tablefilename != ""
+	tablefile = open(tablefilename, "w")
+	# TODO: strip first line "10x2 DataFrame"
+	write(tablefile, @show(table))
+	close(tablefile)
+end
 #tableFileHandle.write("""\n| theta   | phi     | Mode    | Pressure Drop (num.) | Solver Runtime (User) |
 #| ------- | ------- | ------- | -------------------- | --------------------- |
 #""")
