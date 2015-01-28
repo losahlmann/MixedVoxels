@@ -1,14 +1,7 @@
 module Permeability
 
-# TODO: modes K_JJ, K_xi, fill, remove
-export K_xi, K_JJ, fill, remove
-
-const modes = Dict{ASCIIString, Function}({
-	"K_xi" = K_xi,
-	"K_JJ" = K_JJ,
-	"fill" = fill,
-	"remove" = remove
-})
+# TODO: method midpoint
+export K_xi, K_JJ, fill, remove, mixedvoxelmethod
 
 function K_xi(xi)
 	return Mt["Porous"], K_0 / (1.0 - xi)
@@ -25,6 +18,13 @@ end
 function remove(xi)
 	return Mt["Fluid"], 1.0
 end
+
+const mixedvoxelmethod = Dict{ASCIIString, Function}({
+	"K_xi" => K_xi,
+	"K_JJ" => K_JJ,
+	"fill" => fill,
+	"remove" => remove
+})
 
 
 end

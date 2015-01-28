@@ -170,11 +170,13 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 			dataarray.datacompressed = []
 			dataarray.compressedblocksizes = []
 
+			# TODO: Int64
+
 			# chop data into blocks
-			dataarray.numberofblocks = floor(datasize/blocksize)
+			dataarray.numberofblocks = floor(Int64, datasize/blocksize)
 
 			# remainder
-			dataarray.lastblocksize = datasize % blocksize
+			dataarray.lastblocksize = int64(datasize % blocksize)
 
 			if dataarray.lastblocksize != 0
 				# count last block as well
@@ -189,9 +191,9 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 				# convert values into bytes
 				if i == dataarray.numberofblocks
 					# last block
-					block = reinterpret(Uint8, vec(dataarray.data)[(i-1)*blocksize+1:end])
-				else	
-					block = reinterpret(Uint8, vec(dataarray.data)[(i-1)*blocksize+1:i*blocksize])
+					block = reinterpret(Uint8, vec(dataarray.data))[(i-1)*blocksize+1:end]
+				else
+					block = reinterpret(Uint8, vec(dataarray.data))[(i-1)*blocksize+1:i*blocksize]
 				end
 
 				# compress with standard compression level

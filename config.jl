@@ -5,13 +5,13 @@ const filtest="/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
 const K_0 = 7.0e-6
 
 # solid volume fraction in porous media
-const Phi_0__ = [0.1, 0.2]
+const Phi_0__ = [0.1]#[0.1, 0.2]
 
 # minimum volume fraction for mixed voxel
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel_ = [0.4, 0.1]
+const dVoxel_ = [0.4]#[0.4, 0.1]
 
 # dimensions of housing
 const dX = 26.4
@@ -25,21 +25,25 @@ const NInlet = 4
 const NOutlet = 4
 
 # read input parameters
-const theta_ = [90, 80, 70, 60, 50]
-const phi_ = [0, 10, 20]
+const theta_ = [90]#[90, 80, 70, 60, 50]
+const phi_ = [0]#[0, 10, 20]
 
 #
-const mode_ = {"0.4" => ["K_JJ", "K_xi", "fill", "remove"],
-				"0.1" => ["fill", "remove"]
+const method_ = {0.4 => ["K_JJ"],#, "K_xi", "fill", "remove"],
+				0.1 => ["fill", "remove"]
 			}
 
 # compress VTI-file
 zip = true
 
 #
+runFiltEST = false
+
+#
 plot = false
 
-table = true
+#
+writetable = false
 
 # filenames, need to be consistent with flowSimInput.xml
 # leave empty if no file should be written
