@@ -17,18 +17,20 @@ end
 include("config.jl")
 
 if plot
-	println("Load Gadfly!")
+	println("Loading ... (Gadfly)!")
 	import Gadfly
 end
 
 # DataFrames table for results
-table = DataFrames.DataFrame(c_Phi_0_ = typeof(Phi_0__[1])[],
-				c_phi = typeof(phi_[1])[],
-				c_theta = typeof(theta_[1])[],
-				c_dVoxel = typeof(dVoxel_[1])[],
-				c_method = ASCIIString[],
-				c_pressuredrop = Float64[])
-# TODO: runtime
+table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
+				phi = typeof(phi_[1])[],
+				theta = typeof(theta_[1])[],
+				dVoxel = typeof(dVoxel_[1])[],
+				method = ASCIIString[],
+				pressuredrop = Float64[],
+				runtime = Float16[],
+				FiltEST_runtime = Float16[])
+
 # TODO: know table size before: more efficient?
 
 # number of iterations
@@ -45,9 +47,12 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 		# TODO: display current parameters, needs change of ProgressMeter.jl
 
+		# take time of execution
+		tic()
+
 		# convert angles to rad
-		theta = deg2rad(theta)
-		phi = deg2rad(phi)
+		theta_rad = deg2rad(theta)
+		phi_rad = deg2rad(phi)
 
 		# set method for treatment of mixed voxels
 		mixedvoxel = mixedvoxelmethod[method]
@@ -71,8 +76,8 @@ for Phi_0_ in Phi_0__, phi in phi_
 		housing = FiltEST_VTIFile()
 
 		# set origin in lower back left corner of fluid area (after Inlet)
-		Norigin = [-(NWall+NInlet), -NWall, -NWall]
-		housing.origin = dVoxel * Norigin
+		NOrigin = [-(NWall+NInlet), -NWall, -NWall]
+		housing.origin = dVoxel * NOrigin
 
 		# set voxel length
 		housing.spacing = dVoxel
@@ -98,7 +103,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		pivot = 0.5 * [dX, dY, dZ]
 
 		# normal vector of planes (||.||=1)
-		n_p = [-cos(phi)*sin(theta), cos(theta), sin(phi)*sin(theta)]
+		n_p = [-cos(phi_rad)*sin(theta_rad), cos(theta_rad), sin(phi_rad)*sin(theta_rad)]
 
 		# position vectors of planes
 		m1 = pivot + dFilter * 0.5 * n_p
@@ -120,7 +125,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 			# center of voxel
 			center = (xyz .- 0.5) * dVoxel
 
-			pos = xyz - Norigin
+			pos = xyz - NOrigin
 
 			# transform plane into voxel coordinate system (einheitsvoxel)
 			# distance between voxel origin and plane, divided by voxel length
@@ -189,6 +194,10 @@ for Phi_0_ in Phi_0__, phi in phi_
 			close(solfile)
 		end
 
+		# runtime of rotated_filter for that model
+		runtime = float16(toq())
+
+
 		# do simulation in FiltEST
 		if runFiltEST == false
 			ProgressBar.next!(progressbar)
@@ -236,16 +245,16 @@ for Phi_0_ in Phi_0__, phi in phi_
 		m = match(r"PressureDrop: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", filtest_output)
 		pressuredrop = float64(m.captures[1])
 
-		# TODO: extract runtime
-		# TODO: runtime of rotated_filter for that model
+		# TODO: extract runtime of FiltEST
 		# cat flowSummary.fest  | grep "Total Solver runtime" >> ../results.txt
+		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
+		FiltEST_runtime = float16(m.captures[1])
 		
 		# # tidy up
 		# rm "flowSummary.fest"
 
 		# save results into table (as row)
-		# TODO: runtime
-		DataFrames.push!(table, [Phi_0_ phi theta dVoxel method pressuredrop])
+		DataFrames.push!(table, [Phi_0_ phi theta dVoxel method pressuredrop runtime FiltEST_runtime])
 
 
 		# update progress bar
@@ -258,26 +267,29 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# TODO: subset in one step
 		subset = table[table[:Phi_0_] .== Phi_0_, :]
 		subset = subset[subset[:phi] .== phi, :]
-		Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"})
-		# TODO: save
+		# TODO: plot title, legends, Syntax
+		plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"})
+		# save plot
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 6inch, 4inch)
+		Gadfly.draw(image, plot)
+		Gadfly.finish(image)
 	end
 
 end # outer for
 
-# write table
+# write table to file
 if writetable == true && tablefilename != ""
+
+	# open file
 	tablefile = open(tablefilename, "w")
+
 	# strip first line "10x2 DataFrame"
 	write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
+
+	# close file
 	close(tablefile)
 end
-#tableFileHandle.write("""\n| theta   | phi     | Mode    | Pressure Drop (num.) | Solver Runtime (User) |
-#| ------- | ------- | ------- | -------------------- | --------------------- |
-#""")
-	#ableFileHandle.write("| {0:<7} | {1:<7} | {2:<7} | {3:<20} | {4:<21} |\n".format(theta, phi, matchObj.group(1), numerical, matchObj.group(5)+" s"))
-
 
 
 # Finished
 println("\nFinished successfully!")
-# show log
