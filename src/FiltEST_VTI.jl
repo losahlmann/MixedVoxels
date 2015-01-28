@@ -138,6 +138,10 @@ function write_FiltEST_header(vti::FiltEST_VTIFile, file::IOStream)
 
 end
 
+function g(t::DataType)
+	 (t==Uint16)? "UInt16":t
+	end
+
 
 # write (compressed) voxel data
 function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
@@ -159,7 +163,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 	for dataarray in vti.voxeldata
 
 		# write tag
-		write(file, """\t\t\t<DataArray type="$(dataarray.datatype)" Name="$(dataarray.name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
+		write(file, """\t\t\t<DataArray type="$(g(dataarray.datatype))" Name="$(dataarray.name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
 
 		# calculate data size in bytes
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)

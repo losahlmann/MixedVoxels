@@ -71,25 +71,26 @@ for Phi_0_ in Phi_0__, phi in phi_
 		housing = FiltEST_VTIFile()
 
 		# set origin in lower back left corner of fluid area (after Inlet)
-		housing.origin = [-dVoxel*(NWall+NInlet), -dVoxel*NWall, -dVoxel*NWall]
+		Norigin = [-(NWall+NInlet), -NWall, -NWall]
+		housing.origin = dVoxel * Norigin
 
 		# set voxel length
 		housing.spacing = dVoxel
 
 		# creta data arrays
-		material = DataArray(Material, 1, Base.fill(Mt["Wall"], Nxt, Nyt, Nzt))
+		material = DataArray(Material, 1, Base.fill(Mt["Solid"], Nxt, Nyt, Nzt))
 
 		# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar? Nein
 		permeability = DataArray(Float64, 1, Base.fill(1.0, Nxt, Nyt, Nzt))
 
 		# add fluid area
-		material.data[NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall:Nzt-NWall] = Mt["Fluid"]
+		material.data[NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall+1:Nzt-NWall] = Mt["Fluid"]
 
 		# add inlet
-		material.data[:, :, 1:NInlet] = Mt["Inflow"]
+		material.data[NWall+1:NWall+NInlet, NWall+1:Nyt-NWall, NWall+1:Nzt-NWall] = Mt["Inflow"]
 
 		# add outlet
-		material.data[:, :, end-NOutlet:end] = Mt["Outflow"]
+		material.data[Nxt-NOutlet-NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall+1:Nzt-NWall] = Mt["Outflow"]
 
 		# filter is limited by two planes
 
@@ -111,11 +112,15 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# TODO: Reihenfolge?
 		# cf. origin
 		for z in 1:Nz, y in 1:Ny, x in 1:Nx
+			xyz = [x,y,z]
+
 			# origin of voxel
-			x0 = [x-1, y-1, z-1] * dVoxel
+			x0 = (xyz .- 1) * dVoxel
 
 			# center of voxel
-			center = ([x-1, y-1, z-1] .+ 0.5) * dVoxel
+			center = (xyz .- 0.5) * dVoxel
+
+			pos = xyz - Norigin
 
 			# transform plane into voxel coordinate system (einheitsvoxel)
 			# distance between voxel origin and plane, divided by voxel length
@@ -134,18 +139,18 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 					if xi > 1-eps
 						# fluid voxel
-						material.data[x,y,z] = Mt["Fluid"]
+						material.data[pos...] = Mt["Fluid"]
 						continue
 					elseif xi > eps
 						# mixed porous voxel
 						m, p = mixedvoxel(xi)
-						material.data[x,y,z] = m
-						permeability.data[x,y,z] = p
+						material.data[pos...] = m
+						permeability.data[pos...] = p
 						continue
 					else
 						# full porous voxel
-						material.data[x,y,z] = Mt["Porous"]
-						permeability.data[x,y,z] = K_0
+						material.data[pos...] = Mt["Porous"]
+						permeability.data[pos...] = K_0
 						continue
 					end
 				end
@@ -153,13 +158,13 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 			# voxel is entirely contained in filter medium: full porous voxel
 			if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
-				material.data[x,y,z] = Mt["Porous"]
-				permeability.data[x,y,z] = K_0
+				material.data[pos...] = Mt["Porous"]
+				permeability.data[pos...] = K_0
 				continue
 			end
 
 			# else voxel is fluid
-			material.data[x,y,z] = Mt["Fluid"]
+			material.data[pos...] = Mt["Fluid"]
 		end
 
 		# add data to FiltEST-VTI-File
