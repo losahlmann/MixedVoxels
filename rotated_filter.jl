@@ -271,10 +271,11 @@ for Phi_0_ in Phi_0__, phi in phi_
 		subset = subset[subset[:phi] .== phi, :]
 		# TODO: plot title, legends, Syntax
 		plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
-			Gadfly.Guide.xlabel("theta"),
-			Gadfly.Guide.ylabel("pressuredrop"),
-			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi=$phi"))
+			Gadfly.Guide.xlabel("𝜃"),
+			Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
+			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
+		# TODO: PGF
 		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.inch, 7.5Gadfly.inch)
 		Gadfly.draw(image, plot)
 		#Gadfly.finish(image)
@@ -302,7 +303,7 @@ end
 
 # write table to CSV-file. Can easily be reloaded
 if writecsv == true && csvfilename != ""
-	writetable("$csvfilename.csv", table)
+	DataFrames.writetable(csvfilename, table)
 end
 
 # FIXME: Colors in Shell on Linux
