@@ -35,17 +35,20 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
 
 # number of iterations
 n = length(Phi_0__) * length(phi_) * length(theta_) * length(dVoxel_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
-println("Ready to calculate $n settings!")
+message = ("Ready to calculate $n settings!")
 
 # initialize progress bar
 # minumum update interval: 1 second
-progressbar = ProgressBar.Progress(n, 1, "Simulate rotated filter... ", 30)
+progressbar = ProgressBar.Progress(n+2, 1, "Simulate rotated filter... ", 30)
 
 # do calculations for all combinations of parameters
 for Phi_0_ in Phi_0__, phi in phi_
 	for theta in theta_, dVoxel in dVoxel_, method in method_[dVoxel]
 
 		# TODO: display current parameters, needs change of ProgressMeter.jl
+		# update progress bar
+		ProgressBar.next!(progressbar, message)
+		message = ""
 
 		# take time of execution
 		tic()
@@ -221,7 +224,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 			filtest_error = readavailable(errorread)
 
 			# log error
-			Progressbar.next!(progressbar, "Error in $Phi_0_ $phi $theta $dVoxel $method")
+			message = "Error in $Phi_0_ $phi $theta $dVoxel $method"
 
 			# try next parameter set
 			continue
@@ -248,7 +251,8 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# TODO: extract runtime of FiltEST
 		# cat flowSummary.fest  | grep "Total Solver runtime" >> ../results.txt
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
-		FiltEST_runtime = float16(m.captures[1])
+		println("time $(m.captures[1])")
+		FiltEST_runtime = float64(m.captures[1])
 		
 		# # tidy up
 		# rm "flowSummary.fest"
@@ -257,8 +261,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		DataFrames.push!(table, [Phi_0_ phi theta dVoxel method pressuredrop runtime FiltEST_runtime])
 
 
-		# update progress bar
-		ProgressBar.next!(progressbar)
+
 
 	end # inner for
 
@@ -277,6 +280,8 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 end # outer for
 
+ProgressBar.next!(progressbar, "Finished calculations. Write table.")
+
 # write table to file
 if writetable == true && tablefilename != ""
 
@@ -292,4 +297,4 @@ end
 
 
 # Finished
-println("\nFinished successfully!")
+ProgressBar.next!(progressbar, "Finished successfully!")

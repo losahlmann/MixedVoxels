@@ -29,6 +29,7 @@
 
 # System
 .DS_Store
+.directory
 
 # Sublime Text
 *.sublime*
@@ -36,3 +37,5 @@
 # Results
 *.vti
 *.sol
+*.fest
+results.txt
