@@ -1,6 +1,10 @@
 # FiltEST location
 const filtest="/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
 
+# fluid properties
+const mu = 1.81e-5 # viscosity
+const rho = 1.2 # density
+
 # permeability of porous media in mm^-2
 const K_0 = 7.0e-6
 
@@ -11,7 +15,7 @@ const Phi_0__ = [0.1]#[0.1, 0.2]
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel_ = [0.4]#[0.4, 0.1]
+const dVoxel_ = [0.4, 0.1]
 
 # dimensions of housing
 const dX = 26.4
@@ -25,11 +29,11 @@ const NInlet = 4
 const NOutlet = 4
 
 # read input parameters
-const theta_ = [90]#[90, 80, 70, 60, 50]
-const phi_ = [0]#[0, 10, 20]
+const theta_ = [90, 50]#[90, 80, 70, 60, 50]
+const phi_ = [0, 10]#[0, 10, 20]
 
 #
-const method_ = {0.4 => ["K_JJ"],#, "K_xi", "fill", "remove"],
+const method_ = {0.4 => ["K_JJ", "K_xi", "fill", "remove"],
 				0.1 => ["fill", "remove"]
 			}
 
@@ -37,13 +41,13 @@ const method_ = {0.4 => ["K_JJ"],#, "K_xi", "fill", "remove"],
 zip = true
 
 #
-runFiltEST = false
+runFiltEST = true
 
 #
-plot = false
+plot = true
 
 #
-writetable = false
+writetable = true
 
 # filenames, need to be consistent with flowSimInput.xml
 # leave empty if no file should be written

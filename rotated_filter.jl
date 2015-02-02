@@ -198,7 +198,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		end
 
 		# runtime of rotated_filter for that model
-		runtime = float16(toq())
+		runtime = float64(toq())
 
 
 		# do simulation in FiltEST
@@ -251,7 +251,6 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# TODO: extract runtime of FiltEST
 		# cat flowSummary.fest  | grep "Total Solver runtime" >> ../results.txt
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
-		println("time $(m.captures[1])")
 		FiltEST_runtime = float64(m.captures[1])
 		
 		# # tidy up
@@ -287,6 +286,9 @@ if writetable == true && tablefilename != ""
 
 	# open file
 	tablefile = open(tablefilename, "w")
+
+	# write header
+	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $mu, density = $rho\n")
 
 	# strip first line "10x2 DataFrame"
 	write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
