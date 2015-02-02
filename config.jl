@@ -44,7 +44,7 @@ zip = true
 runFiltEST = true
 
 #
-plot = true
+plot = false
 
 #
 writetable = true

@@ -270,11 +270,14 @@ for Phi_0_ in Phi_0__, phi in phi_
 		subset = table[table[:Phi_0_] .== Phi_0_, :]
 		subset = subset[subset[:phi] .== phi, :]
 		# TODO: plot title, legends, Syntax
-		plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"})
+		plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
+			Gadfly.Guide.xlabel("theta"),
+			Gadfly.Guide.ylabel("pressuredrop"),
+			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi=$phi"))
 		# save plot
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 6inch, 4inch)
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.inch, 7.5Gadfly.inch)
 		Gadfly.draw(image, plot)
-		Gadfly.finish(image)
+		#Gadfly.finish(image)
 	end
 
 end # outer for
@@ -297,6 +300,7 @@ if writetable == true && tablefilename != ""
 	close(tablefile)
 end
 
+# write table to CSV-file. Can easily be reloaded
 if writecsv == true && csvfilename != ""
 	writetable("$csvfilename.csv", table)
 end
