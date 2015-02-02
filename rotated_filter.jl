@@ -47,6 +47,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 		# TODO: display current parameters, needs change of ProgressMeter.jl
 		# update progress bar
+		message = "$Phi_0_ $phi $theta $dVoxel $method"
 		ProgressBar.next!(progressbar, message)
 		message = ""
 
@@ -253,16 +254,14 @@ for Phi_0_ in Phi_0__, phi in phi_
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
 		FiltEST_runtime = float64(m.captures[1])
 		
-		# # tidy up
-		# rm "flowSummary.fest"
-
 		# save results into table (as row)
 		DataFrames.push!(table, [Phi_0_ phi theta dVoxel method pressuredrop runtime FiltEST_runtime])
 
 
-
-
 	end # inner for
+
+	# tidy up
+	rm("flowSummary.fest")
 
 	# TODO: create plots, call maybe in background, so that we can already continue
 	if plot == true
@@ -297,6 +296,6 @@ if writetable == true && tablefilename != ""
 	close(tablefile)
 end
 
-
+# FIXME: Colors in Shell on Linux
 # Finished
 ProgressBar.next!(progressbar, "Finished successfully!")
