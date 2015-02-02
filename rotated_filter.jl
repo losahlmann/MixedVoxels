@@ -1,9 +1,10 @@
-using Permeability
+#using Permeability
 using FiltEST_VTI
 using MixedVoxels
 import ProgressBar
 import DataFrames
 
+include("src/Permeability.jl")
 include("src/utils.jl")
 
 # config-file as command line parameter
@@ -14,7 +15,7 @@ else
 end
 
 # read config into global variables
-include("config.jl")
+include(config)
 
 if plot
 	println("Loading ... (Gadfly)!")
@@ -152,7 +153,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 						continue
 					elseif xi > eps
 						# mixed porous voxel
-						m, p = mixedvoxel(xi)
+						m, p = mixedvoxel(xi, Phi_0_, center)
 						material.data[pos...] = m
 						permeability.data[pos...] = p
 						continue
@@ -294,6 +295,10 @@ if writetable == true && tablefilename != ""
 
 	# close file
 	close(tablefile)
+end
+
+if writecsv == true && csvfilename != ""
+	writetable("$csvfilename.csv", table)
 end
 
 # FIXME: Colors in Shell on Linux
