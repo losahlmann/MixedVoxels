@@ -139,44 +139,49 @@ for Phi_0_ in Phi_0__, phi in phi_
 			dist2 = (dot(x0, n_p) - d2) / dVoxel
 
 			# intersect Voxel with first and second plane
-			for d in (dist1, dist2)
+			for (d, inv) in ((dist1, false), (dist2, true))
+
 				# "-" because plane is moved against normal direction
 				intersectionpoints = intersection_points(n_p, -d)
 
 				# treat mixed voxels
 				if length(intersectionpoints) > 0
-					# calculate volume fraction
-					xi = 1 - volumefraction(intersectionpoints, n_p, -d)
 
-					if xi > 1-eps
+					# calculate volume fraction
+					if inv
+						# volume on opposite normal side
+						xi = volumefraction(intersectionpoints, n_p, -d)
+					else
+						xi = 1 - volumefraction(intersectionpoints, n_p, -d)
+					end
+
+					if xi > 1 - eps
 						# fluid voxel
 						material.data[pos...] = Mt["Fluid"]
-						continue
+						permeability.data[pos...] = 1.0
+						break
 					elseif xi > eps
 						# mixed porous voxel
 						m, p = mixedvoxel(xi, Phi_0_, center)
 						material.data[pos...] = m
 						permeability.data[pos...] = p
-						continue
+						break
 					else
 						# full porous voxel
 						material.data[pos...] = Mt["Porous"]
 						permeability.data[pos...] = K_0
-						continue
+						break
 					end
+				elseif dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
+					# voxel is entirely contained in filter medium: full porous voxel
+					material.data[pos...] = Mt["Porous"]
+					permeability.data[pos...] = K_0
+				else
+					# else voxel is fluid
+					material.data[pos...] = Mt["Fluid"]
+					permeability.data[pos...] = 1.0
 				end
-			end
-
-			# voxel is entirely contained in filter medium: full porous voxel
-			if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
-				material.data[pos...] = Mt["Porous"]
-				permeability.data[pos...] = K_0
-				continue
-			end
-
-			# else voxel is fluid
-			material.data[pos...] = Mt["Fluid"]
-			permeability.data[pos...] = 1.0
+			end			
 		end
 
 		# add data to FiltEST-VTI-File
