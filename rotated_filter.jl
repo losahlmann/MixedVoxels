@@ -272,7 +272,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#subset = table[table[:Phi_0_] .== Phi_0_, :]
 		#subset = subset[subset[:phi] .== phi, :]
 		# need to convert boolean DataFrames.DataArray into normal array (replacing NA with 0) in order to apply elementwise AND
-		subset = table[Base.array(table[:Phi_0_] .== Phi_0_, 0) & Base.array(table[:phi] .== phi, 0), :]
+		subset = table[DataFrames.array(table[:Phi_0_] .== Phi_0_, 0) & DataFrames.array(table[:phi] .== phi, 0), :]
 		# TODO: plot title, legends, Syntax
 		# TODO: "Splatting", in Julia.md
 		#plot = Gadfly.plot([layer(y = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, ""), :], x = theta_,
@@ -280,12 +280,12 @@ for Phi_0_ in Phi_0__, phi in phi_
 			#Theme(default_color = color(["red" "blue" "green" "cyan" "magenta" "yellow"][i%6+1]))
 #p = plot([[ ]...)
 
-		layers=Layer[]
+		layers = Gadfly.Layer[]
 		for dVoxel in dVoxel_, method in method_[dVoxel]
-			plotdata = subset[Base.array(subset[:dVoxel] .== dVoxel, 0) & Base.array(subset[:method] .== method, 0), :]
-			push!(layers, layer(plotdata, x ="theta", y ="pressuredrop", Geom.line)[1])
+			plotdata = subset[DataFrames.array(subset[:dVoxel] .== dVoxel, 0) & DataFrames.array(subset[:method] .== method, 0), :]
+			push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.line)[1])
 		end
-		p = plot(layers)
+		plot = Gadfly.plot(layers)
 
 		
 		#plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
