@@ -269,7 +269,8 @@ for Phi_0_ in Phi_0__, phi in phi_
 	end # inner for
 
 	# tidy up
-	rm("flowSummary.fest")
+	# FIXME: causes halt when does not exist
+	#rm("flowSummary.fest")
 
 	# TODO: create plots, call maybe in background, so that we can already continue
 	if plot == true

@@ -30,7 +30,7 @@ const NOutlet = 4
 
 # read input parameters
 const theta_ = [90, 80, 70, 60, 50]
-const phi_ = [0]#[0, 10, 20]
+const phi_ = [0, 10]#[0, 10, 20]
 
 #
 const method_ = {0.4 => ["K_JJ", "K_xi", "fill", "remove"],
