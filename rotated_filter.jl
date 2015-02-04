@@ -176,6 +176,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 			# else voxel is fluid
 			material.data[pos...] = Mt["Fluid"]
+			permeability.data[pos...] = 1.0
 		end
 
 		# add data to FiltEST-VTI-File
