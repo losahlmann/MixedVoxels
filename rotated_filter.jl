@@ -37,6 +37,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
 # number of iterations
 n = length(Phi_0__) * length(phi_) * length(theta_) * length(dVoxel_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
 message = ("Ready to calculate $n settings!")
+println(message)
 
 # initialize progress bar
 # minumum update interval: 1 second
@@ -267,13 +268,30 @@ for Phi_0_ in Phi_0__, phi in phi_
 	# TODO: create plots, call maybe in background, so that we can already continue
 	if plot == true
 		# TODO: subset in one step
-		subset = table[table[:Phi_0_] .== Phi_0_, :]
-		subset = subset[subset[:phi] .== phi, :]
+		# subset(iris, :(Species .== "setosa"))
+		#subset = table[table[:Phi_0_] .== Phi_0_, :]
+		#subset = subset[subset[:phi] .== phi, :]
+		# need to convert boolean DataFrames.DataArray into normal array (replacing NA with 0) in order to apply elementwise AND
+		subset = table[array(table[:Phi_0_] .== Phi_0_, 0) & array(table[:phi] .== phi, 0), :]
 		# TODO: plot title, legends, Syntax
-		plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
-			Gadfly.Guide.xlabel("𝜃"),
-			Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
-			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
+		# TODO: "Splatting", in Julia.md
+		#plot = Gadfly.plot([layer(y = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, ""), :], x = theta_,
+		#	Gadfly.Geom.line) for dVoxel in dVoxel_, method in method_[dVoxel]]...)
+			#Theme(default_color = color(["red" "blue" "green" "cyan" "magenta" "yellow"][i%6+1]))
+#p = plot([[ ]...)
+
+		layers=Layer[]
+		for dVoxel in dVoxel_, method in method_[dVoxel]
+			plotdata = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, 0), :]
+			push!(layers, layer(plotdata, x ="theta", y ="pressuredrop", Geom.line)[1])
+		end
+		p = plot(layers)
+
+		
+		#plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
+		#	Gadfly.Guide.xlabel("𝜃"),
+		#	Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
+		#	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
 		# TODO: PGF
 		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.inch, 7.5Gadfly.inch)
@@ -292,7 +310,7 @@ if writetable == true && tablefilename != ""
 	tablefile = open(tablefilename, "w")
 
 	# write header
-	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $mu, density = $rho\n")
+	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $mu, density = $rho\n" * "="^20)
 
 	# strip first line "10x2 DataFrame"
 	write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
