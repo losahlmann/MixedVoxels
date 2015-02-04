@@ -35,7 +35,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
 # TODO: know table size before: more efficient?
 
 # number of iterations
-n = length(Phi_0__) * length(phi_) * length(theta_) * length(dVoxel_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
+n = length(Phi_0__) * length(phi_) * length(theta_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
 message = ("Ready to calculate $n settings!")
 println(message)
 
@@ -272,7 +272,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#subset = table[table[:Phi_0_] .== Phi_0_, :]
 		#subset = subset[subset[:phi] .== phi, :]
 		# need to convert boolean DataFrames.DataArray into normal array (replacing NA with 0) in order to apply elementwise AND
-		subset = table[array(table[:Phi_0_] .== Phi_0_, 0) & array(table[:phi] .== phi, 0), :]
+		subset = table[Base.array(table[:Phi_0_] .== Phi_0_, 0) & Base.array(table[:phi] .== phi, 0), :]
 		# TODO: plot title, legends, Syntax
 		# TODO: "Splatting", in Julia.md
 		#plot = Gadfly.plot([layer(y = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, ""), :], x = theta_,
@@ -282,7 +282,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 		layers=Layer[]
 		for dVoxel in dVoxel_, method in method_[dVoxel]
-			plotdata = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, 0), :]
+			plotdata = subset[Base.array(subset[:dVoxel] .== dVoxel, 0) & Base.array(subset[:method] .== method, 0), :]
 			push!(layers, layer(plotdata, x ="theta", y ="pressuredrop", Geom.line)[1])
 		end
 		p = plot(layers)
