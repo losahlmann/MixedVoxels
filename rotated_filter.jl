@@ -293,7 +293,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.point, Gadfly.Geom.line)[1])
 		#end
 
-		colors = [Gadfly.color(c) for c in ["orange", "blue", "red", "blue", "green", "yellow"]]
+		colors = [Gadfly.color(c) for c in ["orange", "blue", "red", "purple", "green", "yellow"]]
 #=plot( dataframe,
     layer( x=:X_Symbol, y=:Y_Symbol, Geom.line, color=["Series Label"],
     layer( x=:X_Symbol2, y=:Y_Symbol2, Geom.line, color=["Series Label 2"],
@@ -301,13 +301,13 @@ for Phi_0_ in Phi_0__, phi in phi_
 )=#
 
 		# split table into rows with same dVoxel, method
-		for plotdata in Dataframes.groupby(subset, [:dVoxel, :method])
+		for plotdata in DataFrames.groupby(subset, [:dVoxel, :method])
 			# add plot layer
 			push!(layers, Gadfly.layer(plotdata,
 									x ="theta",
 									y ="pressuredrop",
 									Gadfly.Geom.point, Gadfly.Geom.line,
-									color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])[1])
+									color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])...)
 		end
 		# plot
 		p = Gadfly.plot(layers,
