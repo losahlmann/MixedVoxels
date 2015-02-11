@@ -200,7 +200,12 @@ for Phi_0_ in Phi_0__, phi in phi_
 			solfile = open(solfilename, "w")
 
 			# write only permeability of porous voxels
-			write(solfile, filter(x -> x < 1.0, permeability.data))
+			#write(solfile, filter(x -> x < 1.0, permeability.data))
+			for x in filter(x -> x < 1.0, permeability.data)
+				for i in 1:6
+					write(solfile, x)
+				end
+			end
 
 			# close file
 			close(solfile)
@@ -323,7 +328,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf")#, 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
