@@ -15,7 +15,7 @@ const Phi_0__ = [0.1]#[0.1, 0.2]
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel_ = [0.4, 0.1]
+const dVoxel_ = [0.4]#, 0.1]
 
 # dimensions of housing
 const dX = 26.4
@@ -29,7 +29,7 @@ const NInlet = 4
 const NOutlet = 4
 
 # read input parameters
-const theta_ = [90, 80]#, 70, 60, 50]
+const theta_ = [80, 70, 60]#, 50]
 const phi_ = [0, 10]#[0, 10, 20]
 
 #
