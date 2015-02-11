@@ -288,11 +288,33 @@ for Phi_0_ in Phi_0__, phi in phi_
 #p = plot([[ ]...)
 
 		layers = Gadfly.Layer[]
-		for dVoxel in dVoxel_, method in method_[dVoxel]
-			plotdata = subset[DataFrames.array(subset[:dVoxel] .== dVoxel, 0) & DataFrames.array(subset[:method] .== method, 0), :]
-			push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.line)[1])
+		#for dVoxel in dVoxel_, method in method_[dVoxel]
+		#	plotdata = subset[DataFrames.array(subset[:dVoxel] .== dVoxel, 0) & DataFrames.array(subset[:method] .== method, 0), :]
+		#	push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.point, Gadfly.Geom.line)[1])
+		#end
+
+		colors = [Gadfly.color("orange") Gadfly.color("blue") Gadfly.color("red") Gadfly.color("blue") Gadfly.color("green") Gadfly.color("yellow")]
+#=plot( dataframe,
+    layer( x=:X_Symbol, y=:Y_Symbol, Geom.line, color=["Series Label"],
+    layer( x=:X_Symbol2, y=:Y_Symbol2, Geom.line, color=["Series Label 2"],
+    Scale.discrete_color_manual(color_arr...)
+)=#
+
+		# split table into rows with same dVoxel, method
+		for plotdata in groupby(subset, [:dVoxel, :method])
+			# add plot layer
+			push!(layers, Gadfly.layer(plotdata,
+									x ="theta",
+									y ="pressuredrop",
+									Gadfly.Geom.point, Gadfly.Geom.line,
+									Gadfly.color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])[1])
 		end
-		plot = Gadfly.plot(layers)
+		# plot
+		plot = Gadfly.plot(layers,
+			Scale.color_discrete_manual(colors...)
+			Gadfly.Guide.xlabel("𝜃"),
+			Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
+			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n 𝜑 = $phi"))
 
 		
 		#plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
@@ -301,7 +323,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.inch, 7.5Gadfly.inch)
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, plot)
 		#Gadfly.finish(image)
 	end
