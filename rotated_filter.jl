@@ -307,7 +307,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#brown: #a65628
 		#pink: #f781bf
 
-		colors = [Gadfly.color(c) for c in ["orange", "blue", "red", "purple", "green", "yellow"]]
+		colors = [Gadfly.color(c) for c in ["\#e41a1c", "\#377eb8", "\#4daf4a", "\#984ea3", "\#ff7f00", "\#ffff33", "\#a65628", "\#f781bf"]]
 #=plot( dataframe,
     layer( x=:X_Symbol, y=:Y_Symbol, Geom.line, color=["Series Label"],
     layer( x=:X_Symbol2, y=:Y_Symbol2, Geom.line, color=["Series Label 2"],
@@ -323,6 +323,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 									Gadfly.Geom.point, Gadfly.Geom.line,
 									color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])...)
 		end
+
 		# plot
 		p = Gadfly.plot(layers,
 			Gadfly.Scale.color_discrete_manual(colors...),
@@ -356,7 +357,9 @@ if writetable == true && tablefilename != ""
 	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $mu, density = $rho\n" * "="^20)
 
 	# strip first line "10x2 DataFrame"
-	write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
+	#write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
+	# write full table in Markdown style, not only chunks, without header
+	DataFrames.showall(tablefile, table, false, symbol("Row"), false)
 
 	# close file
 	close(tablefile)
