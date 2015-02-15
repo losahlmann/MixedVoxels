@@ -177,7 +177,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 			# TODO: Int64
 
 			# chop data into blocks
-			dataarray.numberofblocks = floor(Int64, datasize/blocksize)
+			dataarray.numberofblocks = ifloor(datasize/blocksize)
 
 			# remainder
 			dataarray.lastblocksize = int64(datasize % blocksize)

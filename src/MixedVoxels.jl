@@ -3,7 +3,7 @@ module MixedVoxels
 # TODO: clean up includings
 include("utils.jl")
 
-export intersection_points, volumefraction, polygon_area
+export intersection_points, volumefraction, polygon_area, sort_vertices
 
 # intersect a plane with the einheits voxel
 function intersection_points(n_p, d::Float64)
@@ -125,7 +125,7 @@ function polygon_area(vertices)
 	return 0.5 * norm(v)
 end
 
-function g_x(y, z, n_p, d)
+#=function g_x(y, z, n_p, d)
 	#
 	x = (d - n_p[2] * y - n_p[3] * z) / n_p[1]
 
@@ -222,7 +222,7 @@ function flow(n_i, A, n_p, d)
 		else return 0.0
 		end
 	end
-end
+end=#
 
 
 # calculate volume of polyhedron by calculating the flow
@@ -262,7 +262,7 @@ function volumefraction(vertices, n_p, d)
 		# continue if it's a polygon
 		if length(v_i) + length(c_i) > 2
 			A = polygon_area(sort_vertices([v_i, c_i], n_i))
-			volume += flow(n_i, A, n_p, d)
+			volume += A * dot(n_i, c_i[1])#flow(n_i, A, n_p, d)
 		end
 	end
 
@@ -272,9 +272,9 @@ function volumefraction(vertices, n_p, d)
 	A = polygon_area(sort_vertices(vertices, n_p))
 	
 	# calculate flow through this polygon and add to integral
-	volume += flow(n_p, A, n_p, d)
+	volume += A * dot(n_p, vertices[1]) #flow(n_p, A, n_p, d)
 
-	return volume
+	return volume/3.0
 end
 
 end
