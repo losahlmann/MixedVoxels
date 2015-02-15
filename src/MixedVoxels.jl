@@ -3,7 +3,7 @@ module MixedVoxels
 # TODO: clean up includings
 include("utils.jl")
 
-export intersection_points, volumefraction
+export intersection_points, volumefraction, polygon_area
 
 # intersect a plane with the einheits voxel
 function intersection_points(n_p, d::Float64)

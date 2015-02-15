@@ -298,6 +298,15 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.point, Gadfly.Geom.line)[1])
 		#end
 
+		#red: #e41a1c
+		#blue: #377eb8
+		#green: #4daf4a
+		#purple: #984ea3
+		#orange: #ff7f00
+		#yellow: #ffff33
+		#brown: #a65628
+		#pink: #f781bf
+
 		colors = [Gadfly.color(c) for c in ["orange", "blue", "red", "purple", "green", "yellow"]]
 #=plot( dataframe,
     layer( x=:X_Symbol, y=:Y_Symbol, Geom.line, color=["Series Label"],
@@ -328,7 +337,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf")#, 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
