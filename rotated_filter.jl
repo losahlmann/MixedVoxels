@@ -200,8 +200,15 @@ for Phi_0_ in Phi_0__, phi in phi_
 			solfile = open(solfilename, "w")
 
 			# write only permeability of porous voxels
+			porous = filter(x -> x < 1.0, permeability.data)
+
+			# check if we selected the right amount of voxels
+			if length(porous) != length(filter(x -> x == Mt["Porous"], material.data))
+				error("Porous voxel number in SOL-file is not correct!")
+			end
+
 			#write(solfile, filter(x -> x < 1.0, permeability.data))
-			for x in filter(x -> x < 1.0, permeability.data)
+			for x in porous
 				for i in 1:6
 					write(solfile, x)
 				end
@@ -298,14 +305,27 @@ for Phi_0_ in Phi_0__, phi in phi_
 		#	push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.point, Gadfly.Geom.line)[1])
 		#end
 
-		#red: #e41a1c
-		#blue: #377eb8
-		#green: #4daf4a
-		#purple: #984ea3
-		#orange: #ff7f00
-		#yellow: #ffff33
-		#brown: #a65628
-		#pink: #f781bf
+		#
+		# red: #e41a1c
+		# blue: #377eb8
+		# green: #4daf4a
+		# purple: #984ea3
+		# orange: #ff7f00
+		# yellow: #ffff33
+		# brown: #a65628
+		# pink: #f781bf
+
+		# tableaufriction
+		# red: 214,39,40
+		# blue: 31,119,180
+		# green: 44,160,44
+		# orange: 255,127,14
+		# purple: 148,103,189
+		# brown: 140,86,75
+		# rose: 227,119,194
+		# grey: 127,127,127
+		# greenish: 188,189,34
+		# blueish: 23,190,207
 
 		colors = [Gadfly.color(c) for c in ["\#e41a1c", "\#377eb8", "\#4daf4a", "\#984ea3", "\#ff7f00", "\#ffff33", "\#a65628", "\#f781bf"]]
 #=plot( dataframe,
