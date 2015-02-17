@@ -35,7 +35,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
 # TODO: know table size before: more efficient?
 
 # number of iterations
-n = length(Phi_0__) * length(phi_) * length(theta_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
+const n = length(Phi_0__) * length(phi_) * length(theta_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
 message = ("Ready to calculate $n settings!")
 println(message)
 
@@ -162,7 +162,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 						break
 					elseif xi > eps
 						# mixed porous voxel
-						m, p = mixedvoxel(xi, Phi_0_, center)
+						m, p = mixedvoxel(xi, Phi_0_)
 						material.data[pos...] = m
 						permeability.data[pos...] = p
 						break
@@ -314,34 +314,16 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# yellow: #ffff33
 		# brown: #a65628
 		# pink: #f781bf
-
-		# tableaufriction
-		# red: 214,39,40
-		# blue: 31,119,180
-		# green: 44,160,44
-		# orange: 255,127,14
-		# purple: 148,103,189
-		# brown: 140,86,75
-		# rose: 227,119,194
-		# grey: 127,127,127
-		# greenish: 188,189,34
-		# blueish: 23,190,207
-
 		colors = [Gadfly.color(c) for c in ["\#e41a1c", "\#377eb8", "\#4daf4a", "\#984ea3", "\#ff7f00", "\#ffff33", "\#a65628", "\#f781bf"]]
-#=plot( dataframe,
-    layer( x=:X_Symbol, y=:Y_Symbol, Geom.line, color=["Series Label"],
-    layer( x=:X_Symbol2, y=:Y_Symbol2, Geom.line, color=["Series Label 2"],
-    Scale.discrete_color_manual(color_arr...)
-)=#
 
 		# split table into rows with same dVoxel, method
 		for plotdata in DataFrames.groupby(subset, [:dVoxel, :method])
 			# add plot layer
 			push!(layers, Gadfly.layer(plotdata,
-									x ="theta",
-									y ="pressuredrop",
-									Gadfly.Geom.point, Gadfly.Geom.line,
-									color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])...)
+							x ="theta",
+							y ="pressuredrop",
+							Gadfly.Geom.point, Gadfly.Geom.line,
+							color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])...)
 		end
 
 		# plot
@@ -352,10 +334,6 @@ for Phi_0_ in Phi_0__, phi in phi_
 			Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n 𝜑 = $phi"))
 
 		
-		#plot = Gadfly.plot(subset, {:x => "theta", :y => "pressuredrop"},
-		#	Gadfly.Guide.xlabel("𝜃"),
-		#	Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
-		#	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi𝜑=$phi"))
 		# save plot
 		# TODO: PGF
 		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)

@@ -139,8 +139,8 @@ function write_FiltEST_header(vti::FiltEST_VTIFile, file::IOStream)
 end
 
 function g(t::DataType)
-	 (t==Uint16)? "UInt16":t
-	end
+	(t==Uint16)? "UInt16" : t
+end
 
 
 # write (compressed) voxel data
@@ -156,7 +156,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 		<CellData>\n""")
 
 	# in bytes
-	blocksize = 32768
+	const blocksize = 32768
 	offset = 0
 
 	# write tags for all DataArrays

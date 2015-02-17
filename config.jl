@@ -38,21 +38,21 @@ const method_ = {0.4 => ["K_JJ", "K_xi", "fill", "remove"],
 			}
 
 # compress VTI-file
-zip = true
+const zip = true
 
 #
-runFiltEST = true
+const runFiltEST = false
 
 #
-plot = true
+const plot = false
 
 #
-writetable = true
-writecsv = true
+const writetable = false
+const writecsv = false
 
 # filenames, need to be consistent with flowSimInput.xml
 # leave empty if no file should be written
-vtifilename = "housing.vti"
-solfilename = "savedK.sol"
-tablefilename = "results.txt"
-csvfilename = "results.csv"
+const vtifilename = "housing.vti"
+const solfilename = "savedK.sol"
+const tablefilename = "results.txt"
+const csvfilename = "results.csv"

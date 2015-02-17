@@ -11,7 +11,7 @@ function intersection_points(n_p, d::Float64)
 	intersectionpoints = (Array{Float64,1})[]
 
 	# minimal distance of an intersection point from a cube corner
-	eps = 1e-7
+	const eps = 1e-7
 
 	# no intersection possible if
 	if abs(d) > sqrt(3.0)
@@ -237,11 +237,11 @@ function volumefraction(vertices, n_p, d)
 	volume = 0.0
 
 	# cube normals
-	cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0],
+	const cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0],
 		[0, -1, 0], [0, 0, 1], [0, 0, -1]}
 
 	# cube vertices
-	c = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
+	const c = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
 		[1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]}
 
 	# check all 6 cube sides

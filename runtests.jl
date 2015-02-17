@@ -8,26 +8,29 @@ tests = ["test/MixedVoxels_test.jl",
 			"test/FiltEST_VTI_test.jl"]
 
 # custom test handler
-test_handler(r::Test.Success) = println("Success on $(r.expr)")
-test_handler(r::Test.Failure) = println("Failure in $(r.expr)")
-test_handler(r::Test.Error) = println("Error in $(r.expr)")
+test_handler(r::Test.Success) = nothing
+test_handler(r::Test.Failure) = print_with_color(:red, "Failure in $(r.expr)\n")
+test_handler(r::Test.Error) = print_with_color(:red, "Error in $(r.expr)\n")
 
-println("Running tests:")
-Test.with_handler(test_handler) do
+
+
+function runtest()
 	for test in tests
 		include(test)
 	end
 
-
-	@test string("Hello ", "Julia") == "Hello Julia"
-	@test_approx_eq 7.000000000001 7.0
+	# TEST tests
+	@test string("Hello ", "Julia") == "Hello Julia1" # makes Failure
+	@test_approx_eq 7.0000000000001 7.0 # does not work: returns no succes message
 	@test_throws ErrorException error("An error!")
 
 	# TEST utils.jl
+	println("TEST equalszero")
 	@test equalszero(2e-11)
 	@test !equalszero(2e-10)
 
-
+	# TEST miscellaneous
+	println("TEST miscellaneous")
 	cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]}
 	@test cubenormals[1] == [1.0,0.0,0.0]
 
@@ -46,7 +49,10 @@ Test.with_handler(test_handler) do
 
 
 end
-println("Finished tests!")
+
+print_with_color(:green, "Running tests:\n")
+Test.with_handler(runtest, test_handler)
+print_with_color(:green, "Finished tests!\n")
 
 # # cube presentation
 # n_p = [-1/sqrt(3), 1/sqrt(3), 1/sqrt(3)]
