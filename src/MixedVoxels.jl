@@ -23,31 +23,31 @@ function intersection_points(n_p, d::Float64)
 		for y in (0, 1)
 			for x in (0, 1)
 				# corner
-				c = [x, y, z]
+				corner = [x, y, z]
 
 				# check if corner is in plane and plane inside the voxel
-				if equalszero(dot(n_p, c) - d) && abs(dot(n_p, [0.5,0.5,0.5]) - d) < 0.5-eps
-					push!(intersectionpoints, c)
+				if equalszero(dot(n_p, corner) - d) && abs(dot(n_p, [0.5,0.5,0.5]) - d) < 0.5-eps
+					push!(intersectionpoints, corner)
 				end
 
 				# skip corner (1,1,1)
-				if c == [1, 1, 1] continue end
+				if corner == [1, 1, 1] continue end
 
 				# 3 possible edges for this corner
 				for j = 1:3
 
 					# edge direction
-					e = [0, 0, 0]
+					edge = [0, 0, 0]
 
 					# only consider edges in positive directions
-					if c[j] == 1
+					if corner[j] == 1
 						continue
 					else
-						e[j] = 1
+						edge[j] = 1
 					end
 
 					# scalar product of plane normal and edge direction
-					denom = dot(n_p, e)
+					denom = dot(n_p, edge)
 
 					# check edge for intersection with plane
 					if equalszero(denom)
@@ -55,14 +55,14 @@ function intersection_points(n_p, d::Float64)
 						lambda = -1.0
 					else
 						# intersection point = c+lambda*e
-						lambda = (d - dot(n_p, c)) / denom
+						lambda = (d - dot(n_p, corner)) / denom
 					end
 
 					# test for intersection within cube
 					if eps < lambda < 1.0-eps
 						
 						# intersection
-						point = c + lambda * e
+						point = corner + lambda * edge
 
 						# add intersection point
 						push!(intersectionpoints, point)
@@ -241,7 +241,7 @@ function volumefraction(vertices, n_p, d)
 		[0, -1, 0], [0, 0, 1], [0, 0, -1]}
 
 	# cube vertices
-	const c = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
+	const corners = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
 		[1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]}
 
 	# check all 6 cube sides
@@ -257,7 +257,7 @@ function volumefraction(vertices, n_p, d)
 		v_i = filter(x -> equalszero(dot(x, n_i) - d_i), vertices)
 
 		# choose cube corner points in this side and under plane
-		c_i = filter(x -> equalszero(dot(x, n_i) - d_i) && (dot(x, n_p) - d < 0), c)
+		c_i = filter(x -> equalszero(dot(x, n_i) - d_i) && (dot(x, n_p) - d < 0), corners)
 
 		# continue if it's a polygon
 		if length(v_i) + length(c_i) > 2

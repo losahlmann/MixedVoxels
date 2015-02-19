@@ -46,8 +46,8 @@ type DataArray
 	data
 	datacompressed :: Array{Any,1}
 	compressedblocksizes :: Array{Uint32,1}
-	numberofblocks
-	lastblocksize
+	numberofblocks :: Int64
+	lastblocksize :: Int64
 end
 
 DataArray() = DataArray("", Any, 0, [], [], [], 0, 0)
@@ -56,11 +56,11 @@ DataArray(datatype::DataType, components::Int64, data) = DataArray("", datatype,
 
 # FiltEST-VTIFile
 type FiltEST_VTIFile
-	traversedirection
-	units
-	dimension
-	origin
-	spacing
+	traversedirection :: ASCIIString
+	units :: ASCIIString
+	dimension :: Int64
+	origin :: Array{Float64,1}
+	spacing :: Float64
 	voxeldata :: Array{DataArray, 1} #Dict{ASCIIString, DataArray}
 end
 
@@ -144,7 +144,7 @@ end
 
 
 # write (compressed) voxel data
-function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
+function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 
 	# get extents of data
 	materialdata = get_data(vti, "Material")
@@ -169,7 +169,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
 
 		# prepare data to be written compressed
-		if zip
+		if zipVTI
 			# clear
 			dataarray.datacompressed = []
 			dataarray.compressedblocksizes = []
@@ -229,7 +229,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zip::Bool)
 
 	# write data of all DataArrays
 	for dataarray in vti.voxeldata
-		if zip
+		if zipVTI
 			# write head in UInt32 (==unsigned int)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
 
@@ -261,7 +261,7 @@ end
 
 
 # write FiltEST-VTIFile
-function write_file(vti::FiltEST_VTIFile, filename, zip::Bool)
+function write_file(vti::FiltEST_VTIFile, filename, zipVTI::Bool)
 
 	# TODO: try/catch
 
@@ -272,13 +272,13 @@ function write_file(vti::FiltEST_VTIFile, filename, zip::Bool)
 	# FIXME: trailing space when data not zipped
 	write(file, """<?xml version="1.0"?>
 		<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian\""""
-		* (zip ? """ compressor="vtkZLibDataCompressor">\n""" : ">\n"))
+		* (zipVTI ? """ compressor="vtkZLibDataCompressor">\n""" : ">\n"))
 
 	# write FiltEST-XML-header
 	write_FiltEST_header(vti, file)
 
 	# write data
-	write_data(vti, file, zip::Bool)
+	write_data(vti, file, zipVTI::Bool)
 
 	# finish VTI-XML
 	write(file, "\n</VTKFile>")

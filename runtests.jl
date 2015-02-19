@@ -1,11 +1,14 @@
 #using RunTests
 using Base.Test
+using Lint
 
 include("src/utils.jl")
 
 
 tests = ["test/MixedVoxels_test.jl",
 			"test/FiltEST_VTI_test.jl"]
+
+lints = ["rotated_filter.jl", "src/FiltEST_VTI.jl", "src/MixedVoxels.jl"]
 
 # custom test handler
 test_handler(r::Test.Success) = nothing
@@ -54,6 +57,9 @@ print_with_color(:green, "Running tests:\n")
 Test.with_handler(runtest, test_handler)
 print_with_color(:green, "Finished tests!\n")
 
+print_with_color(:green, "Running lint:\n")
+map(lintfile, lints)
+print_with_color(:green, "Finished lint!\n")
 # # cube presentation
 # n_p = [-1/sqrt(3), 1/sqrt(3), 1/sqrt(3)]
 # dist = 1/(2*sqrt(3))

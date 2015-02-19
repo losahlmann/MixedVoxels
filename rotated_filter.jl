@@ -8,14 +8,14 @@ include("src/Permeability.jl")
 include("src/utils.jl")
 
 # config-file as command line parameter
-if length(ARGS) == 0
+#=if length(ARGS) == 0
 	config = "config.jl"
 else
 	config = ARGS[1]
-end
+end=#
 
 # read config into global variables
-include(config)
+include("config.jl")
 
 if plot
 	println("Loading ... (Gadfly)!")
@@ -139,7 +139,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 			dist2 = (dot(x0, n_p) - d2) / dVoxel
 
 			# intersect Voxel with first and second plane
-			for (d, inv) in ((dist1, false), (dist2, true))
+			for (d, invert) in ((dist1, false), (dist2, true))
 
 				# "-" because plane is moved against normal direction
 				intersectionpoints = intersection_points(n_p, -d)
@@ -148,7 +148,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 				if length(intersectionpoints) > 0
 
 					# calculate volume fraction
-					if inv
+					if invert
 						# volume on opposite normal side
 						xi = volumefraction(intersectionpoints, n_p, -d)
 					else
@@ -191,7 +191,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 		# write FiltEST-VTI-File
 		if vtifilename != ""
-			write_file(housing, vtifilename, zip)
+			write_file(housing, vtifilename, zipVTI)
 		end
 		
 		# write SOL-File
@@ -200,10 +200,10 @@ for Phi_0_ in Phi_0__, phi in phi_
 			solfile = open(solfilename, "w")
 
 			# write only permeability of porous voxels
-			porous = filter(x -> x < 1.0, permeability.data)
+			porous = filter(perm -> perm < 1.0, permeability.data)
 
 			# check if we selected the right amount of voxels
-			if length(porous) != length(filter(x -> x == Mt["Porous"], material.data))
+			if length(porous) != length(filter(mat -> mat == Mt["Porous"], material.data))
 				error("Porous voxel number in SOL-file is not correct!")
 			end
 
@@ -364,7 +364,7 @@ if writetable == true && tablefilename != ""
 end
 
 # write table to CSV-file. Can easily be reloaded
-if writecsv == true && csvfilename != ""
+if writeCSV == true && csvfilename != ""
 	DataFrames.writetable(csvfilename, table)
 end
 
