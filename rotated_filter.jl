@@ -1,32 +1,27 @@
 #using Permeability
 using FiltEST_VTI
-using MixedVoxels
+using Mixehs
 import ProgressBar
 import DataFrames
 
 include("src/Permeability.jl")
 include("src/utils.jl")
 
-# config-file as command line parameter
-#=if length(ARGS) == 0
-	config = "config.jl"
-else
-	config = ARGS[1]
-end=#
 
 # read config into global variables
 include("config.jl")
 
+# load Gadfly only if needed
 if plot
 	println("Loading ... (Gadfly)!")
 	import Gadfly
 end
 
 # DataFrames table for results
-table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
-				phi = typeof(phi_[1])[],
-				theta = typeof(theta_[1])[],
-				dVoxel = typeof(dVoxel_[1])[],
+table = DataFrames.DataFrame(Phi_0_ = typeof(𝚽_0_[1])[],
+				phi = typeof(𝜑[1])[],
+				theta = typeof(𝜃[1])[],
+				h = typeof(dVoxel[1])[],
 				method = ASCIIString[],
 				pressuredrop = Float64[],
 				runtime = Float16[],
@@ -34,8 +29,8 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(Phi_0__[1])[],
 
 # TODO: know table size before: more efficient?
 
-# number of iterations
-const n = length(Phi_0__) * length(phi_) * length(theta_) * sum(a -> length(a), [method_[b] for b in dVoxel_])
+# calculate number of iterations
+const n = length(𝚽_0_) * length(𝜑) * length(𝜃) * sum(a -> length(a), [methods[b] for b in dVoxel])
 message = ("Ready to calculate $n settings!")
 println(message)
 
@@ -44,12 +39,12 @@ println(message)
 progressbar = ProgressBar.Progress(n+2, 1, "Simulate rotated filter... ", 30)
 
 # do calculations for all combinations of parameters
-for Phi_0_ in Phi_0__, phi in phi_
-	for theta in theta_, dVoxel in dVoxel_, method in method_[dVoxel]
+for Phi_0_ in 𝚽_0_, phi in 𝜑
+	for theta in 𝜃, h in dVoxel, method in methods[h]
 
 		# TODO: display current parameters, needs change of ProgressMeter.jl
 		# update progress bar
-		message = "$Phi_0_ $phi $theta $dVoxel $method"
+		message = "$Phi_0_ $phi $theta $h $method"
 		ProgressBar.next!(progressbar, message)
 		message = ""
 
@@ -66,9 +61,9 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# generate housing.vti
 		
 		# dimensions in voxels (without in-/outlet, wall)
-		Nx = round(Int64, dX/dVoxel)
-		Ny = round(Int64, dY/dVoxel)
-		Nz = round(Int64, dZ/dVoxel)
+		Nx = round(Int64, L_x/h)
+		Ny = round(Int64, L_y/h)
+		Nz = round(Int64, L_z/h)
 
 		# extensions of housing (with without in-/outlet, wall)
 		Nyt = Ny + 2 * NWall
@@ -83,10 +78,10 @@ for Phi_0_ in Phi_0__, phi in phi_
 
 		# set origin in lower back left corner of fluid area (after Inlet)
 		NOrigin = [-(NWall+NInlet), -NWall, -NWall]
-		housing.origin = dVoxel * NOrigin
+		housing.origin = h * NOrigin
 
 		# set voxel length
-		housing.spacing = dVoxel
+		housing.spacing = h
 
 		# creta data arrays
 		material = DataArray(Material, 1, Base.fill(Mt["Solid"], Nxt, Nyt, Nzt))
@@ -106,7 +101,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# filter is limited by two planes
 
 		# center/pivot filter medium
-		pivot = 0.5 * [dX, dY, dZ]
+		pivot = 0.5 * [L_x, L_y, L_z]
 
 		# normal vector of planes (||.||=1)
 		n_p = [-cos(phi_rad)*sin(theta_rad), cos(theta_rad), sin(phi_rad)*sin(theta_rad)]
@@ -126,17 +121,17 @@ for Phi_0_ in Phi_0__, phi in phi_
 			xyz = [x,y,z]
 
 			# origin of voxel
-			x0 = (xyz .- 1) * dVoxel
+			x0 = (xyz .- 1) * h
 
 			# center of voxel
-			center = (xyz .- 0.5) * dVoxel
+			center = (xyz .- 0.5) * h
 
 			pos = xyz - NOrigin
 
 			# transform plane into voxel coordinate system (einheitsvoxel)
 			# distance between voxel origin and plane, divided by voxel length
-			dist1 = (dot(x0, n_p) - d1) / dVoxel
-			dist2 = (dot(x0, n_p) - d2) / dVoxel
+			dist1 = (dot(x0, n_p) - d1) / h
+			dist2 = (dot(x0, n_p) - d2) / h
 
 			# intersect Voxel with first and second plane
 			for (d, invert) in ((dist1, false), (dist2, true))
@@ -245,7 +240,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 			filtest_error = readavailable(errorread)
 
 			# log error
-			message = "Error in $Phi_0_ $phi $theta $dVoxel $method"
+			message = "Error in $Phi_0_ $phi $theta $h $method"
 
 			# try next parameter set
 			continue
@@ -275,7 +270,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		FiltEST_runtime = float64(m.captures[1])
 		
 		# save results into table (as row)
-		DataFrames.push!(table, [Phi_0_ phi theta dVoxel method pressuredrop runtime FiltEST_runtime])
+		DataFrames.push!(table, [Phi_0_ phi theta h method pressuredrop runtime FiltEST_runtime])
 
 
 	end # inner for
@@ -294,14 +289,14 @@ for Phi_0_ in Phi_0__, phi in phi_
 		subset = table[DataFrames.array(table[:Phi_0_] .== Phi_0_, 0) & DataFrames.array(table[:phi] .== phi, 0), :]
 		# TODO: plot title, legends, Syntax
 		# TODO: "Splatting", in Julia.md
-		#plot = Gadfly.plot([layer(y = subset[array(subset[:dVoxel] .== dVoxel, 0) & array(subset[:method] .== method, ""), :], x = theta_,
-		#	Gadfly.Geom.line) for dVoxel in dVoxel_, method in method_[dVoxel]]...)
+		#plot = Gadfly.plot([layer(y = subset[array(subset[:h] .== h, 0) & array(subset[:method] .== method, ""), :], x = 𝜃,
+		#	Gadfly.Geom.line) for h in dVoxel, method in methods[h]]...)
 			#Theme(default_color = color(["red" "blue" "green" "cyan" "magenta" "yellow"][i%6+1]))
 #p = plot([[ ]...)
 
 		layers = Gadfly.Layer[]
-		#for dVoxel in dVoxel_, method in method_[dVoxel]
-		#	plotdata = subset[DataFrames.array(subset[:dVoxel] .== dVoxel, 0) & DataFrames.array(subset[:method] .== method, 0), :]
+		#for h in dVoxel, method in methods[h]
+		#	plotdata = subset[DataFrames.array(subset[:h] .== h, 0) & DataFrames.array(subset[:method] .== method, 0), :]
 		#	push!(layers, Gadfly.layer(plotdata, x ="theta", y ="pressuredrop", Gadfly.Geom.point, Gadfly.Geom.line)[1])
 		#end
 
@@ -316,14 +311,14 @@ for Phi_0_ in Phi_0__, phi in phi_
 		# pink: #f781bf
 		colors = [Gadfly.color(c) for c in ["\#e41a1c", "\#377eb8", "\#4daf4a", "\#984ea3", "\#ff7f00", "\#ffff33", "\#a65628", "\#f781bf"]]
 
-		# split table into rows with same dVoxel, method
-		for plotdata in DataFrames.groupby(subset, [:dVoxel, :method])
+		# split table into rows with same h, method
+		for plotdata in DataFrames.groupby(subset, [:h, :method])
 			# add plot layer
 			push!(layers, Gadfly.layer(plotdata,
 							x ="theta",
 							y ="pressuredrop",
 							Gadfly.Geom.point, Gadfly.Geom.line,
-							color=["$(plotdata[:method][1]) $(plotdata[:dVoxel][1])"])...)
+							color=["$(plotdata[:method][1]) $(plotdata[:h][1])"])...)
 		end
 
 		# plot
@@ -336,7 +331,7 @@ for Phi_0_ in Phi_0__, phi in phi_
 		
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_phi_$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PDF("Phi_0_$(Phi_0_)_𝜑$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
@@ -352,7 +347,7 @@ if writetable == true && tablefilename != ""
 	tablefile = open(tablefilename, "w")
 
 	# write header
-	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $mu, density = $rho\n" * "="^20)
+	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $𝜇, density = $𝜌\n" * "="^20)
 
 	# strip first line "10x2 DataFrame"
 	#write(tablefile, replace(string(table),r"^[^\n]+\n","",1))

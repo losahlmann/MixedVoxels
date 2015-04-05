@@ -8,7 +8,9 @@ include("src/utils.jl")
 tests = ["test/MixedVoxels_test.jl",
 			"test/FiltEST_VTI_test.jl"]
 
-lints = ["rotated_filter.jl", "src/FiltEST_VTI.jl", "src/MixedVoxels.jl"]
+lints = ["rotated_filter.jl",
+			"src/FiltEST_VTI.jl",
+			"src/MixedVoxels.jl"]
 
 # custom test handler
 test_handler(r::Test.Success) = nothing
