@@ -15,12 +15,12 @@ const Phi_0__ = [0.1]#[0.1, 0.2]
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel_ = [0.4]#, 0.1]
+const dVoxel_ = [0.4]#, 0.1] # h
 
 # dimensions of housing
-const dX = 26.4
-const dY = 8.0
-const dZ = 8.0
+const dX = 26.4 # L_x
+const dY = 8.0 # L_y
+const dZ = 8.0 # L_z
 const dFilter = 1.6
 
 # sizes in number of voxels

@@ -23,7 +23,7 @@ function runtest()
 	end
 
 	# TEST tests
-	@test string("Hello ", "Julia") == "Hello Julia1" # makes Failure
+	@test string("Hello ", "Julia") == "Hello Julia1" # rises Failure
 	@test_approx_eq 7.0000000000001 7.0 # does not work: returns no succes message
 	@test_throws ErrorException error("An error!")
 
