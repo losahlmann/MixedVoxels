@@ -4,6 +4,7 @@
 #export K_xi, K_JJ, fill, remove, mixedvoxelmethod
 
 function K_xi(xi, Phi_0_)
+	# FIXME: xi=1 ?
 	K = K_0 / (1.0 - xi)
 	return Mt["Porous"], K
 end
@@ -29,7 +30,7 @@ function midpoint(xi, Phi_0_)
 	end
 end
 
-
+# TODO: with symbols
 const mixedvoxelmethod = Dict{ASCIIString, Function}({
 	"K_xi" => K_xi,
 	"K_JJ" => K_JJ,
