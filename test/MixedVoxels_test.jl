@@ -78,10 +78,14 @@ for plane in planes
 	d = plane["d"]
 	vol = plane["vol"]
 	eps = plane["approx_eps"]
-	if eps == 0
-		@test volumefraction(MixedVoxels.intersection_points(n_p, d), n_p, d) == vol
-	elseif eps > 0
-		@test_approx_eq_eps volumefraction(MixedVoxels.intersection_points(n_p, d), n_p, d) vol eps
+	
+	# do loop as macro to be able to see which test failed
+	@eval begin
+		if $eps == 0
+			@test volumefraction(MixedVoxels.intersection_points($n_p, $d), $n_p, $d) == $vol
+		elseif $eps > 0
+			@test_approx_eq_eps volumefraction(MixedVoxels.intersection_points($n_p, $d), $n_p, $d) $vol $eps
+		end
 	end
 end
 
