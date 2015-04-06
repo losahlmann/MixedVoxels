@@ -33,20 +33,21 @@ const 𝜃 = [80, 70, 60]#, 50]
 const 𝜑 = [0, 10]#[0, 10, 20]
 
 #
-const methods = {0.4 => ["K_JJ", "K_xi", "fill", "remove"],
-				0.1 => ["fill", "remove"]
-			}
+const methods = {
+	0.4 => ["K_JJ", "K_xi", "fill", "remove"],
+	0.1 => ["fill", "remove"]
+}
 
-# compress VTI-file
+# compress VTI-file?
 const zipVTI = true
 
-#
+# do simulation or only write VTI-file?
 const runFiltEST = false
 
-#
+# plot simulation results?
 const plot = false
 
-#
+# write simulation results into files?
 const writetable = false
 const writeCSV = false
 
