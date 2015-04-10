@@ -28,8 +28,6 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(𝚽_0_[1])[],
 				runtime = Float16[],
 				FiltEST_runtime = Float16[])
 
-# TODO: know table size before: more efficient?
-
 # calculate number of iterations
 const n = length(𝚽_0_) * length(𝜑) * length(𝜃) * sum(a -> length(a), [methods[b] for b in dVoxel])
 message = ("Ready to calculate $n settings!")
@@ -84,13 +82,14 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# set voxel length
 		housing.spacing = h
 
-		# creta data arrays
+		# create data arrays
 		material = DataArray(Material, 1, Base.fill(Mt["Solid"], Nxt, Nyt, Nzt))
 
 		# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar? Nein
+		# permeability of wall =1, because not porous
 		permeability = DataArray(Float64, 1, Base.fill(1.0, Nxt, Nyt, Nzt))
 
-		# add fluid area
+		# add fluid domain
 		material.data[NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall+1:Nzt-NWall] = Mt["Fluid"]
 
 		# add inlet
@@ -104,7 +103,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# center/pivot filter medium
 		pivot = 0.5 * [L_x, L_y, L_z]
 
-		# normal vector of planes (||.||=1)
+		# normal vector of planes (||.|| = 1)
 		n_p = [-cos(phi_rad)*sin(theta_rad), cos(theta_rad), sin(phi_rad)*sin(theta_rad)]
 
 		# position vectors of planes
