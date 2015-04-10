@@ -32,8 +32,20 @@ housing.spacing = 0.4
 add_data(housing, "Material", material)
 add_data(housing, "Permeability", permeability)
 
-write_file(housing, "housing_test.vti", true)
+write_file(housing, "test/housing.vti", true)
 
+reffile = open("test/housing_test_ref.vti")
+testfile = open("test/housing.vti")
+housing_ref = readall(reffile)
+housing_test = readall(testfile)
+housing_ref = replace(housing_ref, r"<Date>(.+)<\/Date>", "<Date></Date>")
+housing_test = replace(housing_test, r"<Date>(.+)<\/Date>", "<Date></Date>")
+
+@test housing_ref == housing_test
+
+close(reffile)
+close(testfile)
+rm("test/housing.vti")
 #num2hex(Mt["Porous"])
 #println(reinterpret(Uint8,[Mt["Inflow"], Mt["Porous"], Mt["Outflow"], Mt["Fluid"]]))
 

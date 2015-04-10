@@ -34,8 +34,12 @@
 # Sublime Text
 *.sublime*
 
+# Texpad
+*.texpadtmp/
+
 # Results
 *.vti
+!*_ref.vti
 *.sol
 *.fest
 results.txt
