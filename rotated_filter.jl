@@ -8,7 +8,9 @@ include("src/utils.jl")
 
 
 # read config into global variables
-include("config.jl")
+if !isdefined(:config)
+	include("config.jl")
+end
 
 # load Gadfly only if needed
 if plot
@@ -218,7 +220,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 
 		# do simulation in FiltEST
 		if runFiltEST == false
-			ProgressBar.next!(progressbar)
+			#ProgressBar.next!(progressbar)
 			continue
 		end
 
@@ -291,7 +293,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		#plot = Gadfly.plot([layer(y = subset[array(subset[:h] .== h, 0) & array(subset[:method] .== method, ""), :], x = 𝜃,
 		#	Gadfly.Geom.line) for h in dVoxel, method in methods[h]]...)
 			#Theme(default_color = color(["red" "blue" "green" "cyan" "magenta" "yellow"][i%6+1]))
-#p = plot([[ ]...)
+		#p = plot([[ ]...)
 
 		layers = Gadfly.Layer[]
 		#for h in dVoxel, method in methods[h]

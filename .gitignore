@@ -41,5 +41,6 @@
 *.vti
 !*_ref.vti
 *.sol
+!*_ref.sol
 *.fest
 results.txt

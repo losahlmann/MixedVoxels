@@ -41,7 +41,7 @@ function midpoint(xi, Phi_0_)
 end
 
 # TODO: with symbols
-const mixedvoxelmethod = Dict{ASCIIString, Function}({
+mixedvoxelmethod = Dict{ASCIIString, Function}({
 	"K_xi" => K_xi,
 	"K_JJ" => K_JJ,
 	"fill" => fill,

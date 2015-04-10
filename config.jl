@@ -53,6 +53,7 @@ const writeCSV = false
 
 # filenames, need to be consistent with flowSimInput.xml
 # leave empty if no file should be written
+# FIXME: doppelung mit writetable/writeCSV
 const vtifilename = "housing.vti"
 const solfilename = "savedK.sol"
 const tablefilename = "results.txt"
