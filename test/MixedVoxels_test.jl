@@ -1,5 +1,12 @@
 using MixedVoxels
 
+import FiltEST_VTI: Mt, DataArray
+
+include("../src/Permeability.jl")
+
+K_0 = 7.0e-6
+Phi_0_ = 0.1
+
 # TEST volumefraction()
 println("TEST volumefraction()")
 
@@ -88,6 +95,26 @@ for plane in planes
 		end
 	end
 end
+
+#println("TEST Plane")
+
+println("TEST Geometry")
+
+plane = Plane([1,0,0], 0.5)
+
+geom = Geometry()
+geom.extent = [1, 1, 1]
+geom.h = 1.0
+
+add!(geom, plane)
+
+m = DataArray(Uint16, 1, Base.fill(Mt["Fluid"], 1, 1, 1))
+p = DataArray(Float64, 1, Base.fill(1.0, 1, 1, 1))
+
+discretise(geom, x->K_xi(x,Phi_0_), m, p)
+
+@test m.data[1,1,1] == Mt["Porous"]
+@test p.data[1,1,1] == 1.4e-5
 
 
 # Test 1: vol=0.5, 4 Schnittpunkte (sind Würfelecken),

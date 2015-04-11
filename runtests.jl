@@ -8,7 +8,7 @@ include("src/utils.jl")
 tests = ["test/MixedVoxels_test.jl",
 			"test/FiltEST_VTI_test.jl",
 			"test/Permeability_test.jl",
-			"test/rotated_filter_test.jl"]
+			]#"test/rotated_filter_test.jl"]
 
 lints = ["rotated_filter.jl",
 			"src/FiltEST_VTI.jl",
@@ -28,9 +28,9 @@ function runtest()
 	end
 
 	# TEST tests
-	@test string("Hello ", "Julia") == "Hello Julia1" # rises Failure
-	@test_approx_eq 7.0000000000001 7.0 # does not work: returns no succes message
-	@test_throws ErrorException error("An error!")
+	#@test string("Hello ", "Julia") == "Hello Julia1" # rises Failure
+	#@test_approx_eq 7.0000000000001 7.0 # does not work: returns no succes message
+	#@test_throws ErrorException error("An error!")
 
 	# TEST utils.jl
 	println("TEST equalszero")

@@ -94,7 +94,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel, method in methods[h]
 	add_geometry(housing, outer_plane_right)
 
 	# do voxelisation
-	generate(housing, method, ("Material", "Permeability"))
+	generate(housing, method)
 
 	# write FiltEST-VTI-File
 	if vtifilename != ""

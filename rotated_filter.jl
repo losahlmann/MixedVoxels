@@ -75,9 +75,9 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# create FiltEST-VTI-File
 		housing = FiltEST_VTIFile()
 
-		# set origin in lower back left corner of fluid area (after Inlet)
-		NOrigin = [-(NWall+NInlet), -NWall, -NWall]
-		housing.origin = h * NOrigin
+		# set geometry origin in lower back left corner of fluid area (after Inlet)
+		NOffOrigin = [-(NWall+NInlet), -NWall, -NWall]
+		housing.origin = h * NOffOrigin
 
 		# set voxel length
 		housing.spacing = h
@@ -126,7 +126,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 			# center of voxel
 			center = (xyz .- 0.5) * h
 
-			pos = xyz - NOrigin
+			pos = xyz - NOffOrigin
 
 			# transform plane into voxel coordinate system (einheitsvoxel)
 			# distance between voxel origin and plane, divided by voxel length

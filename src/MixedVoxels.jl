@@ -4,6 +4,7 @@ module MixedVoxels
 include("utils.jl")
 
 export intersection_points, volumefraction, polygon_area, sort_vertices
+export Geometry, Plane, add!, discretise
 
 # intersect a plane with the einheits voxel
 function intersection_points(n_p, d::Float64)
@@ -275,6 +276,101 @@ function volumefraction(vertices, n_p, d)
 	volume += A * dot(n_p, vertices[1]) #flow(n_p, A, n_p, d)
 
 	return volume/3.0
+end
+
+
+abstract GeometryElement
+
+type Plane <: GeometryElement
+	n_p :: Array{Float64, 1} # outer normal
+	#inv :: Bool
+	#m :: Float64
+	d :: Float64
+end
+
+Plane() = Plane([0,0,0], 0)
+
+#type arc
+
+type Geometry
+	geometry_elements :: Array{GeometryElement, 1}
+	# extensions in housing coordinate sys, containing geometry
+	# test here for intersection
+	extent :: Array{Uint64, 1}
+	h :: Float64
+end
+
+Geometry() = Geometry(GeometryElement[], [0,0,0], 0.0)
+
+function add!(geom::Geometry, element::GeometryElement)
+	push!(geom.geometry_elements, element)
+end
+
+function intersect(plane::Plane, voxel::Array{Uint64, 1}, h::Float64)
+
+	#  origin of voxel
+	x0 = (voxel .- 1) * h
+
+	d = (dot(x0, plane.n_p) - plane.d) / h
+
+	# "-" because plane is moved against normal direction
+	return intersection_points(plane.n_p, -d)
+
+end
+
+function volumefraction(plane::Plane, vertices)
+	return volumefraction(vertices, plane.n_p, plane.d)
+end
+
+function inside(plane::Plane, vertex::Array{Float64, 1})
+	
+	if dot(vertex, plane.n_p) - plane.d < 0
+		return false
+	else
+		return true
+	end
+end
+
+function discretise(geom::Geometry, mixedvoxel::Function, data1, data2)
+	Nx, Ny, Nz = geom.extent
+	# for each interior voxel
+	# TODO if iterior, compare to extension of FiltEST_VTI
+	for z in 1:Nz, y in 1:Ny, x in 1:Nx
+		cut=false
+		voxel = [x, y, z]
+		
+		for element in geom.geometry_elements
+			intersectionpoints = intersect(element, voxel, geom.h)
+
+			# treat mixed voxels
+			if length(intersectionpoints) > 0
+				xi = volumefraction(element, intersectionpoints)
+				if inside(element, [0.0,0.0,1.0])
+					xi = 1 - xi
+				end
+				m, p = mixedvoxel(xi)
+				data1.data[voxel...] = m
+				data2.data[voxel...] = p
+				cut=true
+				# only intersection with one geometry element!
+				break
+			end	
+		end
+
+		if cut continue end
+
+		# IDEE: mache angeschnittene Voxel porös und gehe dann von porösem bis zu porösem Voxel und fülle zwischendrin mit porös
+
+		# check if voxel is entirely contained in filter medium: full porous voxel
+		for element in geom.geometry_elements
+			# center of voxel
+			center = (voxel .- 0.5) * h
+			if inside(element, center)
+				continue
+			end
+			# else voxel is fluid
+		end
+	end
 end
 
 end

@@ -40,18 +40,17 @@ MtName = Dict{Material, ASCIIString}({
 # DataArray
 # TODO: Template for DataType
 type DataArray
-	name :: ASCIIString
 	datatype :: DataType
 	components :: Int64
 	data
-	datacompressed :: Array{Any,1}
-	compressedblocksizes :: Array{Uint32,1}
+	datacompressed :: Array{Any, 1}
+	compressedblocksizes :: Array{Uint32, 1}
 	numberofblocks :: Int64
 	lastblocksize :: Int64
 end
 
-DataArray() = DataArray("", Any, 0, [], [], [], 0, 0)
-DataArray(datatype::DataType, components::Int64, data) = DataArray("", datatype, components, data, [], [], 0, 0)
+DataArray() = DataArray(Any, 0, [], [], [], 0, 0)
+DataArray(datatype::DataType, components::Int64, data) = DataArray(datatype, components, data, [], [], 0, 0)
 
 
 # FiltEST-VTIFile
@@ -59,27 +58,24 @@ type FiltEST_VTIFile
 	traversedirection :: ASCIIString
 	units :: ASCIIString
 	dimension :: Int64
-	origin :: Array{Float64,1}
+	origin :: Array{Float64, 1}
 	spacing :: Float64
-	voxeldata :: Array{DataArray, 1} #Dict{ASCIIString, DataArray}
+	voxeldata :: Dict{ASCIIString, DataArray}
+	dataorder :: Array{ASCIIString, 1}
 end
 
-FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, DataArray[])
+FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, (ASCIIString => DataArray)[], [])
 
 
 # TODO: name::UTF8 möglich?
+# TODO: !add_data ?
 function add_data(vti::FiltEST_VTIFile, name::ASCIIString, vd::DataArray)
 
-		# set name of DataArray
-		vd.name = name
+		# add names in order of addition
+		push!(vti.dataorder, name)
 
-		# add DataArray to vector
-		push!(vti.voxeldata, vd)
-end
-
-function get_data(vti::FiltEST_VTIFile, name::ASCIIString)
-	# return data of first DataArray in vti named "name"
-	return filter(x -> x.name == name, vti.voxeldata)[1].data
+		# add DataArray to dict
+		push!(vti.voxeldata, name, vd)
 end
 
 # get number of voxels of each material
@@ -88,7 +84,7 @@ function get_material_count(vti::FiltEST_VTIFile)
 	# access material data
 	# TODO: use try/catch for file handling
 	#try
-		materialdata = get_data(vti, "Material")
+		materialdata = vti.voxeldata["Material"].data
 	#catch e
 	#	error(e)
 	#end
@@ -147,8 +143,8 @@ end
 function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 
 	# get extents of data
-	materialdata = get_data(vti, "Material")
-	wholeextent = size(materialdata)
+	primarydata = vti.voxeldata[vti.dataorder[1]]
+	wholeextent = size(primarydata.data)
 
 	# write dimensions of data
 	write(file, """<ImageData WholeExtent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])" Origin="$(join(vti.origin, " "))" Spacing="$(strip(string(vti.spacing," ")^3))">
@@ -160,10 +156,12 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 	offset = 0
 
 	# write tags for all DataArrays
-	for dataarray in vti.voxeldata
+	for name in vti.dataorder
+
+		dataarray = vti.voxeldata[name]
 
 		# write tag
-		write(file, """\t\t\t<DataArray type="$(g(dataarray.datatype))" Name="$(dataarray.name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
+		write(file, """\t\t\t<DataArray type="$(g(dataarray.datatype))" Name="$(name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
 
 		# calculate data size in bytes
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
@@ -218,7 +216,6 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 		else
 			offset += datasize + 1
 		end
-
 	end
 
 	# close tags
@@ -228,7 +225,8 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 	<AppendedData encoding="raw">_""")
 
 	# write data of all DataArrays
-	for dataarray in vti.voxeldata
+	for name in vti.dataorder
+		dataarray = vti.voxeldata[name]
 		if zipVTI
 			# write head in UInt32 (==unsigned int)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
