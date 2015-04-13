@@ -306,7 +306,7 @@ function volumefraction(plane::Plane, vertices)
 end
 
 
-function intersect(plane::Plane, voxel::Array{Uint64, 1}, h::Float64)
+function translate(plane::Plane, voxel::Array{Uint64, 1}, h::Float64)
 
 	#  origin of voxel
 	x0 = (voxel .- 1) * h
@@ -315,7 +315,7 @@ function intersect(plane::Plane, voxel::Array{Uint64, 1}, h::Float64)
 	d = (dot(x0, plane.n_p) - plane.d) / h
 
 	# "-" because plane is moved against normal direction
-	return intersection_points(Plane(plane.n_p, -d))
+	return Plane(plane.n_p, -d)
 
 end
 
@@ -341,11 +341,13 @@ function discretise(geom::Geometry, NOffOrigin::Array{Int64, 1}, mixedvoxel::Fun
 		
 		for element in geom.geometry_elements
 
-			intersectionpoints = intersect(element, voxel, geom.h)
+			element_loc = translate(element, voxel, geom.h)
+			intersectionpoints = intersection_points(element_loc)
 
 			# treat mixed voxels
 			if length(intersectionpoints) > 0
-				xi = 1-volumefraction(element, intersectionpoints)
+				# needs local plane
+				xi = 1-volumefraction(element_loc, intersectionpoints)
 
 				m, p = mixedvoxel(xi)
 				data1.data[pos...] = m
@@ -367,7 +369,7 @@ function discretise(geom::Geometry, NOffOrigin::Array{Int64, 1}, mixedvoxel::Fun
 		
 		# center of voxel
 		center = (voxel .- 0.5) * geom.h
-		if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
+		#=if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
 			# voxel is entirely contained in filter medium: full porous voxel
 			material.data[pos...] = Mt["Porous"]
 			permeability.data[pos...] = K_0
@@ -375,7 +377,7 @@ function discretise(geom::Geometry, NOffOrigin::Array{Int64, 1}, mixedvoxel::Fun
 			# else voxel is fluid
 			material.data[pos...] = Mt["Fluid"]
 			permeability.data[pos...] = 1.0
-		end
+		end=#
 		for element in geom.geometry_elements
 			if inside(element, center)
 				m, p = mixedvoxel(0.0)
