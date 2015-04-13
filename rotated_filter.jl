@@ -55,7 +55,16 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		phi_rad = deg2rad(phi)
 
 		# set method for treatment of mixed voxels
-		mixedvoxel = mixedvoxelmethod[method]
+		#mixedvoxel = mixedvoxelmethod[method]
+		function mixedvoxel(xi)
+			if xi > 1-eps
+				return Mt["Fluid"], 1.0
+			elseif xi > eps
+				return mixedvoxelmethod[method](xi, Phi_0_)
+			else
+				return Mt["Porous"], K_0
+			end
+		end
 
 		# generate housing.vti
 		
@@ -98,7 +107,13 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# add outlet
 		material.data[Nxt-NOutlet-NWall+1:Nxt-NWall, NWall+1:Nyt-NWall, NWall+1:Nzt-NWall] = Mt["Outflow"]
 
+		# add data to FiltEST-VTI-File
+		add_data(housing, "Material", material)
+		add_data(housing, "Permeability", permeability)
+
 		# filter is limited by two planes
+		geom = Geometry([Nx,Ny,Nz], h)
+
 
 		# center/pivot filter medium
 		pivot = 0.5 * [L_x, L_y, L_z]
@@ -112,12 +127,22 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 
 		# distances of planes from origin
 		d1 = dot(m1, n_p)
-		d2 = dot(m2, n_p)
+		d2 = dot(m2, -n_p)
+
+		plane1 = Plane(n_p, d1)
+		plane2 = Plane(-n_p, d2)
+
+		add!(geom, plane1)
+		add!(geom, plane2)
+
+		discretise(geom, NOffOrigin, mixedvoxel,
+			housing.voxeldata["Material"],
+			housing.voxeldata["Permeability"])
 
 		# determine material and permeability for each interior voxel
 		# TODO: Reihenfolge?
 		# cf. origin
-		for z in 1:Nz, y in 1:Ny, x in 1:Nx
+		#=for z in 1:Nz, y in 1:Ny, x in 1:Nx
 			xyz = [x,y,z]
 
 			# origin of voxel
@@ -177,11 +202,9 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 					permeability.data[pos...] = 1.0
 				end
 			end			
-		end
+		end=#
 
-		# add data to FiltEST-VTI-File
-		add_data(housing, "Material", material)
-		add_data(housing, "Permeability", permeability)
+
 
 
 		# write FiltEST-VTI-File

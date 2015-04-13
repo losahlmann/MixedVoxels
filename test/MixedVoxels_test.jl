@@ -6,11 +6,12 @@ include("../src/Permeability.jl")
 
 K_0 = 7.0e-6
 Phi_0_ = 0.1
+eps = 1e-3
 
 # TEST volumefraction()
-println("TEST volumefraction()")
+println("TEST volumefraction")
 
-planes = [
+tests = [
 	{ # Test 1: vol=0.5, 4 Schnittpunkte (sind Würfelecken),
 	# bzw. Schnitt sind zwei diagonal gegenüberliegende Würfelkanten
 	"n_p" => [-1/sqrt(2), 1/sqrt(2), 0],
@@ -80,18 +81,17 @@ planes = [
 	"approx_eps" => 1e-6}
 ]
 
-for plane in planes
-	n_p = plane["n_p"]
-	d = plane["d"]
-	vol = plane["vol"]
-	eps = plane["approx_eps"]
+for test in tests
+	plane = Plane(test["n_p"], test["d"])
+	vol = test["vol"]
+	eps = test["approx_eps"]
 	
 	# do loop as macro to be able to see which test failed
 	@eval begin
 		if $eps == 0
-			@test volumefraction(MixedVoxels.intersection_points($n_p, $d), $n_p, $d) == $vol
+			@test volumefraction($plane, MixedVoxels.intersection_points($plane)) == $vol
 		elseif $eps > 0
-			@test_approx_eq_eps volumefraction(MixedVoxels.intersection_points($n_p, $d), $n_p, $d) $vol $eps
+			@test_approx_eq_eps volumefraction($plane, MixedVoxels.intersection_points($plane)) $vol $eps
 		end
 	end
 end
@@ -99,22 +99,37 @@ end
 #println("TEST Plane")
 
 println("TEST Geometry")
-
-plane = Plane([1,0,0], 0.5)
+# 1/3 filled voxel
+# xi = 2/3
+plane = Plane([1,0,0], 1/3)
 
 geom = Geometry()
 geom.extent = [1, 1, 1]
 geom.h = 1.0
-
 add!(geom, plane)
+
+intersectionpoints = MixedVoxels.intersect(plane, geom.extent, geom.h)
+@test intersectionpoints == {[1/3,0,0],[1/3,1,0],[1/3,0,1],[1/3,1,1]}
+@test MixedVoxels.volumefraction(plane, intersectionpoints) == 1/3
+@test MixedVoxels.inside(plane, [0.5,0.5,0.5]) == false
 
 m = DataArray(Uint16, 1, Base.fill(Mt["Fluid"], 1, 1, 1))
 p = DataArray(Float64, 1, Base.fill(1.0, 1, 1, 1))
 
-discretise(geom, x->K_xi(x,Phi_0_), m, p)
+function mixedvoxel1(xi)
+	if xi > 1-eps
+		return Mt["Fluid"], 1.0
+	elseif xi > eps
+		return K_xi(xi, Phi_0_)
+	else
+		return Mt["Porous"], K_0
+	end
+end
+
+discretise(geom, [0,0,0], mixedvoxel1, m, p)
 
 @test m.data[1,1,1] == Mt["Porous"]
-@test p.data[1,1,1] == 1.4e-5
+@test_approx_eq p.data[1,1,1] 2.1e-5
 
 
 # Test 1: vol=0.5, 4 Schnittpunkte (sind Würfelecken),
