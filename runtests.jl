@@ -13,7 +13,8 @@ tests = ["test/MixedVoxels_test.jl",
 lints = ["rotated_filter.jl",
 			"src/FiltEST_VTI.jl",
 			"src/MixedVoxels.jl",
-			"src/Permeability.jl"]
+			"src/Permeability.jl",
+			"src/savedK.jl"]
 
 # custom test handler
 test_handler(r::Test.Success) = nothing

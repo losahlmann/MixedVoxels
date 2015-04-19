@@ -64,31 +64,30 @@ include("../rotated_filter.jl")
 
 vtireffile = open("test/housing_rotated_filter_ref.vti")
 vticreffile = open("test/housing_rotated_filter_c_ref.vti")
-vtitestfile = open("housing.vti")
-solreffile = open("test/savedK_rotated_filter_ref.sol")
-solcreffile = open("test/savedK_rotated_filter_c_ref.sol")
-soltestfile = open("savedK.sol")
+vtitestfile = open(vtifilename)
 
 housing_ref = readall(vtireffile)
 housing_cref = readall(vticreffile)
 housing_test = readall(vtitestfile)
-savedK_ref = readall(solreffile)
-savedK_cref = readall(solcreffile)
-savedK_test = readall(soltestfile)
+
 housing_ref = replace(housing_ref, r"<Date>(.+)<\/Date>", "<Date></Date>")
 housing_cref = replace(housing_cref, r"<Date>(.+)<\/Date>", "<Date></Date>")
 housing_test = replace(housing_test, r"<Date>(.+)<\/Date>", "<Date></Date>")
 
 @test housing_ref == housing_cref
-@test savedK_ref == savedK_cref
 @test housing_ref == housing_test
-@test savedK_ref == savedK_test
 
 close(vtireffile)
 close(vticreffile)
 close(vtitestfile)
-close(solreffile)
-close(solcreffile)
-close(soltestfile)
-#rm("housing.vti")
-#rm("savedK.sol")
+
+
+savedK_ref = readK("test/savedK_rotated_filter_ref.sol", 2434)
+savedK_cref = readK("test/savedK_rotated_filter_c_ref.sol", 2434)
+savedK_test = readK(solfilename, 2434)
+
+@test savedK_ref == savedK_test
+@test savedK_ref == savedK_cref
+
+rm("housing.vti")
+rm("savedK.sol")

@@ -1,5 +1,5 @@
 using FiltEST_VTI
-#using Base.Test
+using SaveK
 import Zlib
 
 # TEST type mt
@@ -33,19 +33,28 @@ add_data(housing, "Material", material)
 add_data(housing, "Permeability", permeability)
 
 write_file(housing, "test/housing.vti", true)
+saveK(permeability.data, "test/savedK.sol")
 
-reffile = open("test/housing_test_ref.vti")
-testfile = open("test/housing.vti")
-housing_ref = readall(reffile)
-housing_test = readall(testfile)
+vtireffile = open("test/housing_test_ref.vti")
+vtitestfile = open("test/housing.vti")
+solreffile = open("test/savedK_test_ref.sol")
+soltestfile = open("test/savedK_test_ref.sol")
+housing_ref = readall(vtireffile)
+housing_test = readall(vtitestfile)
 housing_ref = replace(housing_ref, r"<Date>(.+)<\/Date>", "<Date></Date>")
 housing_test = replace(housing_test, r"<Date>(.+)<\/Date>", "<Date></Date>")
+savedK_ref = readall(solreffile)
+saveK_test = readall(soltestfile)
 
 @test housing_ref == housing_test
+@test savedK_ref == saveK_test
 
-close(reffile)
-close(testfile)
+close(vtireffile)
+close(vtitestfile)
+close(solreffile)
+close(soltestfile)
 rm("test/housing.vti")
+rm("test/savedK.sol")
 #num2hex(Mt["Porous"])
 #println(reinterpret(Uint8,[Mt["Inflow"], Mt["Porous"], Mt["Outflow"], Mt["Fluid"]]))
 

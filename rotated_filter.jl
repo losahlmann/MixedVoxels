@@ -1,5 +1,6 @@
 using FiltEST_VTI
 using MixedVoxels
+using SaveK
 import ProgressBar
 import DataFrames
 
@@ -214,26 +215,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		
 		# write SOL-File
 		if solfilename != ""
-			# create file
-			solfile = open(solfilename, "w")
-
-			# write only permeability of porous voxels
-			porous = filter(perm -> perm < 1.0, permeability.data)
-
-			# check if we selected the right amount of voxels
-			if length(porous) != length(filter(mat -> mat == Mt["Porous"], material.data))
-				error("Porous voxel number in SOL-file is not correct!")
-			end
-
-			#write(solfile, filter(x -> x < 1.0, permeability.data))
-			for x in porous
-				for i in 1:6
-					write(solfile, x)
-				end
-			end
-
-			# close file
-			close(solfile)
+			saveK(permeability.data, solfilename)
 		end
 
 		# runtime of rotated_filter for that model
