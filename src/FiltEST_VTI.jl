@@ -67,8 +67,6 @@ end
 FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, (String => DataArray)[], [])
 
 
-# TODO: name::UTF8 möglich?
-# TODO: !add_data ?
 function add_data(vti::FiltEST_VTIFile, name::String, vd::DataArray)
 
 		# add names in order of addition
@@ -232,15 +230,19 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
 
 			# write number of blocks
+			#println("$name $(dataarray.numberofblocks)")
 			write(file, uint32(dataarray.numberofblocks))
 
 			# write block size before compression
 			write(file, uint32(blocksize))
 
 			# write last block size
+			#println("$name $(dataarray.lastblocksize)")
 			write(file, uint32(dataarray.lastblocksize))
 
 			# write sizes of compressed blocks
+			#println("comp block sizes $name")
+			#println(dataarray.compressedblocksizes)
 			write(file, dataarray.compressedblocksizes)
 
 			# write compressed data
@@ -386,7 +388,8 @@ function read_FiltEST_VTI(file, vti)
 		dataarray.lastblocksize = int(read(file, Uint32))
 
 		# read sizes of compressed blocks
-		dataarray.compressedblocksizes = int(read(file, Uint32, 1))
+		dataarray.compressedblocksizes = int(read(file, Uint32, dataarray.numberofblocks))
+		#println("read block sizes $(dataarray.compressedblocksizes)")
 
 		# read compressed data
 		for s in dataarray.compressedblocksizes
@@ -395,13 +398,11 @@ function read_FiltEST_VTI(file, vti)
 
 		# set type of data-array
 		#dataarray.data = (dataarray.datatype)[]
-
 		for compressedblock in dataarray.datacompressed
 			append!(dataarray.data, reinterpret(dataarray.datatype, Zlib.decompress(compressedblock)))
 		end
 
 		dataarray.data = reshape(dataarray.data, extents...)
-
 
 	end
 end

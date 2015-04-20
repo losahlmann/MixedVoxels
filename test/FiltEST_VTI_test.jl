@@ -87,7 +87,27 @@ perm = vtireffile.voxeldata["Permeability"]
 rm("test/housing.vti")
 rm("test/savedK.sol")
 
-
+println("TEST reading of Rotated-Filter-VTI-File")
+housing_ref = read_file("test/housing_rotated_filter_ref.vti")
+@test typeof(housing_ref) == FiltEST_VTIFile
+@test housing_ref.traversedirection == "ZYX"
+@test housing_ref.units == "mm"
+@test housing_ref.dimension == 3
+@test housing_ref.origin == [-2.4000000000000004, -0.8, -0.8]
+@test housing_ref.spacing == 0.4
+@test housing_ref.dataorder == ["Material", "Permeability"]
+@test haskey(housing_ref.voxeldata, "Material")
+@test haskey(housing_ref.voxeldata, "Permeability")
+mat = housing_ref.voxeldata["Material"]
+perm = housing_ref.voxeldata["Permeability"]
+@test typeof(mat) == DataArray
+@test typeof(perm) == DataArray
+@test mat.numberofblocks == 3
+@test perm.numberofblocks == 11
+@test mat.lastblocksize == 24320
+@test perm.lastblocksize == 31744
+@test mat.compressedblocksizes == [322,380,235]
+@test perm.compressedblocksizes == [215,1439,1477,1461,1435,1202,1469,1448,1493,1436,134]
 # uncompressed
 #uncompressed = b"\x3c\x00\x0a\x00\x50\x00\x05\x00"
 #println(uncompressed)

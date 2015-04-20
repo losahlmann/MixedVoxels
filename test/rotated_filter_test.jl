@@ -54,8 +54,8 @@ writeCSV = false
 
 # filenames, need to be consistent with flowSimInput.xml
 # leave empty if no file should be written
-vtifilename = "housing.vti"
-solfilename = "savedK.sol"
+vtifilename = "test/housing.vti"
+solfilename = "test/savedK.sol"
 tablefilename = "results.txt"
 csvfilename = "results.csv"
 
@@ -81,6 +81,10 @@ close(vtireffile)
 close(vticreffile)
 close(vtitestfile)
 
+housing_ref = read_file("test/housing_rotated_filter_ref.vti")
+housing_test = read_file(vtifilename)
+@test housing_ref.voxeldata["Material"].data == housing_test.voxeldata["Material"].data
+@test housing_ref.voxeldata["Permeability"].data == housing_test.voxeldata["Permeability"].data
 
 savedK_ref = readK("test/savedK_rotated_filter_ref.sol", 2434)
 savedK_cref = readK("test/savedK_rotated_filter_c_ref.sol", 2434)
@@ -89,5 +93,5 @@ savedK_test = readK(solfilename, 2434)
 @test savedK_ref == savedK_test
 @test savedK_ref == savedK_cref
 
-rm("housing.vti")
-rm("savedK.sol")
+rm(vtifilename)
+rm(solfilename)

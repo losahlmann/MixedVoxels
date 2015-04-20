@@ -212,7 +212,9 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		if vtifilename != ""
 			write_file(housing, vtifilename, zipVTI)
 		end
-		
+		#println("rotated first block")
+		#println(housing.voxeldata["Material"].datacompressed[1])
+
 		# write SOL-File
 		if solfilename != ""
 			saveK(permeability.data, solfilename)
