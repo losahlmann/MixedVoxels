@@ -2,7 +2,7 @@ module FiltEST_VTI
 
 import Zlib
 
-export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file
+export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file, read_file
 
 
 # Materials
@@ -18,7 +18,7 @@ export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file
 # FIXME: UInt16 in *.vti als Dataarray type string nötig?
 typealias Material Uint16
 
-Mt = Dict{ASCIIString, Material}({
+Mt = Dict{String, Material}({
 	"Solid" => 0,
 	"Fluid" => 5,
 	"Porous" => 10,
@@ -27,7 +27,7 @@ Mt = Dict{ASCIIString, Material}({
 	"Wall" => 101
 }) #FIXME: Symmetry, 0 no slip?
 
-MtName = Dict{Material, ASCIIString}({
+MtName = Dict{Material, String}({
 	0 => "Solid",
 	5 => "Fluid",
 	10 => "Porous",
@@ -55,21 +55,21 @@ DataArray(datatype::DataType, components::Int64, data) = DataArray(datatype, com
 
 # FiltEST-VTIFile
 type FiltEST_VTIFile
-	traversedirection :: ASCIIString
-	units :: ASCIIString
+	traversedirection :: String
+	units :: String
 	dimension :: Int64
 	origin :: Array{Float64, 1}
 	spacing :: Float64
-	voxeldata :: Dict{ASCIIString, DataArray}
-	dataorder :: Array{ASCIIString, 1}
+	voxeldata :: Dict{String, DataArray}
+	dataorder :: Array{String, 1}
 end
 
-FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, (ASCIIString => DataArray)[], [])
+FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, (String => DataArray)[], [])
 
 
 # TODO: name::UTF8 möglich?
 # TODO: !add_data ?
-function add_data(vti::FiltEST_VTIFile, name::ASCIIString, vd::DataArray)
+function add_data(vti::FiltEST_VTIFile, name::String, vd::DataArray)
 
 		# add names in order of addition
 		push!(vti.dataorder, name)
@@ -283,6 +283,146 @@ function write_file(vti::FiltEST_VTIFile, filename, zipVTI::Bool)
 
 	# close file
 	close(file)
+
+end
+
+# TODO: if no match
+function readtagpair(line, tag)
+	m = match(Regex("<$tag>(.+)<\/$tag>"), line)
+	if m == nothing
+		return false
+	else
+		return m.captures[1]
+	end
+end
+
+function readopentag(line, tag)
+	#print(line)
+	m = match(Regex("<$(tag)(?: (.+))?>"), line)
+	if m == nothing
+		return false
+	elseif m.captures[1] == nothing
+		return true
+	else
+		return m.captures[1]
+	end
+end
+
+function readclosetag(line, tag)
+	return ismatch(Regex("<\/$tag>"), line)
+end
+
+function readentity(entities, entity)
+	m = match(Regex("$(entity)=\"([^\"]+)\""), entities)
+	if m == nothing
+		return false
+	else
+		return m.captures[1]
+	end
+end
+
+function read_FiltEST_VTI(file, vti)
+	#header = readuntil(file, delim)
+	#line = readline(file)
+	#println(line)
+	if readline(file) != """<?xml version="1.0"?>\n"""
+		error("error reading vti file!")
+	elseif readline(file) != """<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">\n"""
+		error("error reading vti file! maybe data not zipped!")
+	elseif !readopentag(readline(file), "FiltEST")
+		error("No <FiltEST>-tag")
+	elseif readtagpair(readline(file), "Date") == false
+		# no date: ignore
+	end
+	vti.traversedirection = readtagpair(readline(file), "TraverseDirection")
+	vti.units = readtagpair(readline(file), "Units")
+	vti.dimension = int64(readtagpair(readline(file), "Dimension"))
+
+	readuntil(file, "</FiltEST>\n")
+
+	entities = readopentag(readline(file), "ImageData")
+	vti.origin = float64(split(readentity(entities, "Origin")))
+	vti.spacing = float64(split(readentity(entities, "Spacing")))[1]
+	extents = [int(split(readentity(entities, "WholeExtent")))[i] for i=(2,4,6)]
+
+	readopentag(readline(file), "Piece")
+	readopentag(readline(file), "CellData")
+
+	typefromstring = {"UInt16" => Uint16,
+	"Float64" => Float64}
+
+	line = readline(file)
+	while !readclosetag(line, "CellData")
+		entities = readopentag(line, "DataArray")
+		datatype = typefromstring[readentity(entities, "type")]
+		dataarray = DataArray(datatype,
+			int64(readentity(entities, "NumberOfComponents")),
+			(datatype)[])
+		add_data(vti, readentity(entities, "Name"), dataarray)
+
+		line = readline(file)
+	end
+
+	if !readclosetag(readline(file), "Piece")
+		error("No <Piece>-tag")
+	end
+	if !readclosetag(readline(file), "ImageData")
+		error("No <ImageData>-tag")
+	end
+
+	# skip <AppendedData encoding="raw">_
+	readuntil(file, """<AppendedData encoding="raw">_""")
+
+	for name in vti.dataorder
+		dataarray = vti.voxeldata[name]
+
+		# read number of blocks
+		dataarray.numberofblocks = int(read(file, Uint32))
+
+		# read block size before compression
+		blocksize = int(read(file, Uint32))
+
+		# read last block size
+		dataarray.lastblocksize = int(read(file, Uint32))
+
+		# read sizes of compressed blocks
+		dataarray.compressedblocksizes = int(read(file, Uint32, 1))
+
+		# read compressed data
+		for s in dataarray.compressedblocksizes
+			push!(dataarray.datacompressed, readbytes(file, s))
+		end
+
+		# set type of data-array
+		#dataarray.data = (dataarray.datatype)[]
+
+		for compressedblock in dataarray.datacompressed
+			append!(dataarray.data, reinterpret(dataarray.datatype, Zlib.decompress(compressedblock)))
+		end
+
+		dataarray.data = reshape(dataarray.data, extents...)
+
+
+	end
+end
+
+
+# read FiltEST-VTIFile
+function read_file(filename)
+
+	# 
+	vti = FiltEST_VTIFile()
+
+	# open file
+	file = open(filename, "r")
+	#println(readall(file))
+	# read VTI-XML-header
+	read_FiltEST_VTI(file, vti)
+
+	# close file
+	close(file)
+
+	return vti
 
 end
 

@@ -24,7 +24,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(𝚽_0_[1])[],
 				phi = typeof(𝜑[1])[],
 				theta = typeof(𝜃[1])[],
 				h = typeof(dVoxel[1])[],
-				method = ASCIIString[],
+				method = String[],
 				pressuredrop = Float64[],
 				runtime = Float16[],
 				FiltEST_runtime = Float16[])

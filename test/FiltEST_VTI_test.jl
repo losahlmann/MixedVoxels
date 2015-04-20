@@ -53,10 +53,40 @@ close(vtireffile)
 close(vtitestfile)
 close(solreffile)
 close(soltestfile)
+
+println("TEST reading of FiltEST-VTI-File")
+
+vtireffile = read_file("test/housing_test_ref.vti")
+@test typeof(vtireffile) == FiltEST_VTIFile
+@test vtireffile.traversedirection == "ZYX"
+@test vtireffile.units == "mm"
+@test vtireffile.dimension == 3
+@test vtireffile.origin == [-0.8, -0.4, -0.4]
+@test vtireffile.spacing == 0.4
+@test vtireffile.dataorder == ["Material", "Permeability"]
+@test haskey(vtireffile.voxeldata, "Material")
+@test haskey(vtireffile.voxeldata, "Permeability")
+mat = vtireffile.voxeldata["Material"]
+perm = vtireffile.voxeldata["Permeability"]
+@test typeof(mat) == DataArray
+@test typeof(perm) == DataArray
+#@test mat.offset == 0
+#@test perm.offset == 40
+@test mat.numberofblocks == 1
+@test perm.numberofblocks == 1
+@test mat.lastblocksize == 126
+@test perm.lastblocksize == 504
+@test mat.compressedblocksizes == [24]
+@test perm.compressedblocksizes == [30]
+@test size(mat.data) == (7,3,3)
+@test size(perm.data) == (7,3,3)
+@test mat.data[2,2,2] == Mt["Inflow"]
+@test perm.data[4,2,2] == 7.0e-6
+
+
 rm("test/housing.vti")
 rm("test/savedK.sol")
-#num2hex(Mt["Porous"])
-#println(reinterpret(Uint8,[Mt["Inflow"], Mt["Porous"], Mt["Outflow"], Mt["Fluid"]]))
+
 
 # uncompressed
 #uncompressed = b"\x3c\x00\x0a\x00\x50\x00\x05\x00"
