@@ -110,6 +110,7 @@ add!(geom, plane)
 
 plane_loc = MixedVoxels.translate(plane, geom.extent, geom.h)
 intersectionpoints = MixedVoxels.intersection_points(plane_loc)
+@test typeof(intersectionpoints) == Vertices
 @test intersectionpoints == {[1/3,0,0],[1/3,1,0],[1/3,0,1],[1/3,1,1]}
 @test MixedVoxels.volumefraction(plane, intersectionpoints) == 1/3
 @test MixedVoxels.inside(plane, [0.5,0.5,0.5]) == false

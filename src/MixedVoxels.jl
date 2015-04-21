@@ -5,12 +5,13 @@ include("utils.jl")
 
 export intersection_points, volumefraction, polygon_area, sort_vertices
 export Geometry, Plane, add!, discretise
+export Vertices, Vertex
 
 abstract GeometryElement
 
 type Plane <: GeometryElement
 	# outward pointing normal
-	n_p :: Array{Float64, 1}
+	n_p :: Vector{Float64}
 	d :: Float64
 end
 
@@ -19,9 +20,9 @@ Plane() = Plane([0,0,0], 0)
 # TODO: type arc
 
 type Geometry
-	geometry_elements :: Array{GeometryElement, 1}
+	geometry_elements :: Vector{GeometryElement}
 	# extensions in housing coordinate sys, containing geometry
-	extent :: Array{Uint64, 1}
+	extent :: Vector{Uint64}
 	# discretization length
 	h :: Float64
 end
@@ -33,12 +34,14 @@ function add!(geom::Geometry, element::GeometryElement)
 	push!(geom.geometry_elements, element)
 end
 
+typealias Vertex Vector{Float64}
+typealias Vertices Vector{Vertex}
 
 
 # intersect plane with unit cube
 function intersection_points(plane::Plane)
 	
-	intersectionpoints = (Array{Float64,1})[]
+	intersectionpoints = Vertex[]
 
 	# minimal distance of an intersection point from a cube corner
 	const eps = 1e-7
@@ -110,9 +113,7 @@ end
 
 # sort vertices of a polygon in positive (counterclockwise) direction
 # around the normal vector n
-#isless(::Array{Float64,1}, ::Array{Float64,1})
-# TODO: multiple dispatch
-function sort_vertices(vertices, n_p)
+function sort_vertices(vertices::Vertices, n_p::Vector{Float64})
 
 	# start vector
 	v0 = vertices[1]
@@ -140,8 +141,8 @@ end
 
 # Gauss's shoelace formula for the area of a polygon
 # points must be ordered in positive direction (counterclockwise) around normal vector
-# use sort() for that
-function polygon_area(vertices)
+# use sort_vertices() for that
+function polygon_area(vertices::Vertices)
 
 	v = [0.0, 0.0, 0.0]
 
@@ -152,110 +153,11 @@ function polygon_area(vertices)
 	return 0.5 * norm(v)
 end
 
-#=function g_x(y, z, n_p, d)
-	#
-	x = (d - n_p[2] * y - n_p[3] * z) / n_p[1]
-
-	if x > 1.0
-		return 1.0
-	elseif x < 0.0
-		return 0.0
-	else
-		return x
-	end
-end
-
-
-function g_z(x, y, n_p, d)
-	#
-	z = (d - n_p[1] * x - n_p[2] * y) / n_p[3]
-	if z > 1.0
-		return 1.0
-	elseif z < 0.0
-		return z
-	else
-		return z
-	end
-end
-
-function Tx(n_p, d, y)
-	integral = 0.0
-	x0 = g_x(y, 0, n_p, d)
-	x1 = g_x(y, 1, n_p, d)
-	if x0 < x1
-		c = g_z(0, y, n_p, d)
-		m = -n_p[1]/n_p[3]
-		integral = m/3 * (x1^3-x0^3) + 0.5*c*(x1^2-x0^2)
-	end
-	integral += -0.5*x1^2+0.5
-
-	return -n_p[1]/n_p[2]*integral
-end
-
-# calculate flow of vector field v=(x+1/n_1, -n_1/n_2*x, 0) through plane <x,n_p>=d
-# it is div(v)=1 and dot(v,n)=1
-function flow(n_i, A, n_p, d)
-	# consider different cases of plane's normal vector n_p
-	# choose appropriate vector field
-
-	# case n_p.y == 0 and n_p.z == 0
-	if equalszero(n_p[2]) && equalszero(n_p[3])
-		if (n_i == n_p)
-			return 1+d
-		else
-			return 0.0
-		end
-		
-	# case n_p.y == 0
-	# v=(x+1/n_1, 0, -n_1/n_3*x)
-	elseif equalszero(n_p[2])
-		if		n_i == [1, 0, 0] return (1.0 + 1/n_p[1]) * A
-		elseif n_i == [-1,0, 0] return -1/n_p[1] * A
-		elseif n_i == [0, 1, 0] return 0.0
-		elseif n_i == [0,-1, 0] return 0.0
-		elseif n_i == [0, 0, 1]
-			return -n_p[1]/n_p[3]*(0.5-0.5*g_x(0,1,n_p,d)^2)
-		elseif n_i == [0, 0,-1]
-			return n_p[1]/n_p[3]*(0.5-0.5*g_x(0,0,n_p,d)^2)
-		elseif n_i == n_p return A
-		else return 0.0
-		end
-	
-	# case n_p.z == 0
-	# v=(x+1/n_1, -n_1/n_2*x, 0)
-	elseif equalszero(n_p[3])
-		if		n_i == [1, 0, 0] return (1.0+1.0/n_p[1]) * A
-		elseif n_i == [-1,0, 0] return -1.0/n_p[1] * A
-		elseif n_i == [0, 1, 0]
-			return -n_p[1]/n_p[2]*(0.5-0.5*g_x(1,0,n_p,d)^2)
-		elseif n_i == [0,-1, 0]
-			return n_p[1]/n_p[2]*(0.5-0.5*g_x(0,0,n_p,d)^2)
-		elseif n_i == [0, 0, 1] return 0.0
-		elseif n_i == [0, 0,-1] return 0.0
-		elseif n_i == n_p return A
-		else return 0.0
-		end
-	
-	# general case, n_p.y != 0 and n_p.z != 0
-	# FIXME: noch altes Vektorfeld v=(x, -n_1/n_2*x, 1/n_3), updaten auf obiges
-	else
-		if		n_i == [1, 0, 0] return A
-		elseif n_i == [-1,0, 0] return 0
-		elseif n_i == [0, 0, 1] return A/n_p[3]
-		elseif n_i == [0, 0,-1] return -A/n_p[3]
-		elseif n_i == [0, 1, 0] return Tx(n_p, d, 1) # integrate
-		elseif n_i == [0,-1, 0] return -Tx(n_p, d, 0) # integrate
-		elseif n_i == n_p return A
-		else return 0.0
-		end
-	end
-end=#
-
 
 # calculate volume of polyhedron by calculating the flow
 # of a certain vector field through the surface
 
-function volumefraction(plane::Plane, vertices)
+function volumefraction(plane::Plane, vertices::Vertices)
 
 	# if there's not intersection, it's not a mixed voxel
 	if length(vertices) == 0
@@ -265,11 +167,11 @@ function volumefraction(plane::Plane, vertices)
 	volume = 0.0
 
 	# cube normals
-	const cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0],
-		[0, -1, 0], [0, 0, 1], [0, 0, -1]}
+	const cubenormals = Vector{Float64}[[1, 0, 0], [-1, 0, 0], [0, 1, 0],
+		[0, -1, 0], [0, 0, 1], [0, 0, -1]]
 
 	# cube vertices
-	const corners = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
+	const corners::Vertices = {[0, 0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1],
 		[1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]}
 
 	# check all 6 cube sides
@@ -289,6 +191,7 @@ function volumefraction(plane::Plane, vertices)
 
 		# continue if it's a polygon
 		if length(v_i) + length(c_i) > 2
+			#c_i = map(float64,c_i)
 			A = polygon_area(sort_vertices([v_i, c_i], n_i))
 			volume += A * dot(n_i, c_i[1])#flow(n_i, A, n_p, d)
 		end
@@ -306,7 +209,7 @@ function volumefraction(plane::Plane, vertices)
 end
 
 
-function translate(plane::Plane, voxel::Array{Uint64, 1}, h::Float64)
+function translate(plane::Plane, voxel::Vector{Uint64}, h::Float64)
 
 	#  origin of voxel
 	x0 = (voxel .- 1) * h
@@ -321,7 +224,7 @@ end
 
 
 
-function inside(plane::Plane, vertex::Array{Float64, 1})
+function inside(plane::Plane, vertex::Vertex)
 	
 	if dot(vertex, plane.n_p) > plane.d
 		return false
@@ -330,7 +233,7 @@ function inside(plane::Plane, vertex::Array{Float64, 1})
 	end
 end
 
-function discretise(geom::Geometry, NOffOrigin::Array{Int64, 1}, mixedvoxel::Function, data1, data2)
+function discretise(geom::Geometry, NOffOrigin::Vector{Int64}, mixedvoxel::Function, data1, data2)
 	Nx, Ny, Nz = geom.extent
 	# for each interior voxel
 	# TODO if iterior, compare to extension of FiltEST_VTI
