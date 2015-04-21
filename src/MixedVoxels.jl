@@ -156,7 +156,6 @@ end
 
 # calculate volume of polyhedron by calculating the flow
 # of a certain vector field through the surface
-
 function volumefraction(plane::Plane, vertices::Vertices)
 
 	# if there's not intersection, it's not a mixed voxel
