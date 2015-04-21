@@ -212,8 +212,6 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		if vtifilename != ""
 			write_file(housing, vtifilename, zipVTI)
 		end
-		#println("rotated first block")
-		#println(housing.voxeldata["Material"].datacompressed[1])
 
 		# write SOL-File
 		if solfilename != ""
@@ -237,14 +235,21 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		(errorread, errorwrite) = redirect_stderr()
 
 		# call FiltEST
-		# TODO: call FiltEST directly without bash script, problem: Umgebungsvariablen für Pfade
 		try
 			run(`$filtest flowSimInput.xml`)
 		catch
 			# something went wrong when running FiltEST
 
 			# get error output
+			close(outwrite)
+			close(errorwrite)
 			filtest_error = readavailable(errorread)
+
+			# tidy up
+			close(outread)
+			close(errorread)
+			redirect_stdout(stdout)
+			redirect_stderr(stderr)
 
 			# log error
 			message = "Error in $Phi_0_ $phi $theta $h $method"
@@ -253,13 +258,16 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 			continue
 		end
 
+		# stop capturing of STDOUT and STDERR
+		# ensures that any buffered writes are flushed and available for reading
+		close(outwrite)
+		close(errorwrite)
+
 		# capture STDOUT and STDERR
+		# TODO: readavailable/readall?
 		filtest_output = readavailable(outread)
 		filtest_error = readavailable(errorread)
 
-		# stop capturing of STDOUT and STDERR
-		close(outwrite)
-		close(errorwrite)
 		close(outread)
 		close(errorread)
 
@@ -338,7 +346,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PDF("Phi_0_$(Phi_0_)_𝜑$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PNG("Phi_0_$(Phi_0_)_𝜑$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
@@ -370,6 +378,5 @@ if writeCSV == true && csvfilename != ""
 	DataFrames.writetable(csvfilename, table)
 end
 
-# FIXME: Colors in Shell on Linux
 # Finished
 ProgressBar.next!(progressbar, "Finished successfully!")

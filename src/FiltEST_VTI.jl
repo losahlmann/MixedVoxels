@@ -5,17 +5,19 @@ import Zlib
 export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file, read_file
 
 
-# Materials
-# baremodule Mt
-# 	const Solid = 0
-# 	const Fluid = 5
-# 	const Porous = 10
-# 	const Inflow = 60
-# 	const Outflow = 80
-# 	const Wall = 101
-# end
 
-# FIXME: UInt16 in *.vti als Dataarray type string nötig?
+typefromstring = Dict{String, DataType}({
+	"UInt16" => Uint16,
+	"Float64" => Float64
+})
+
+# VTI writing of data types can differ from Julia
+stringfromtype = Dict{DataType, String}({
+	Uint16 => "UInt16",
+	Float64 => "Float64"
+	})
+
+
 typealias Material Uint16
 
 Mt = Dict{String, Material}({
@@ -38,11 +40,11 @@ MtName = Dict{Material, String}({
 
 
 # DataArray
-# TODO: Template for DataType
 type DataArray
+	# TODO: Template for DataType
 	datatype :: DataType
 	components :: Int64
-	data
+	data 
 	datacompressed :: Array{Any, 1}
 	compressedblocksizes :: Array{Uint32, 1}
 	numberofblocks :: Int64
@@ -66,10 +68,10 @@ end
 
 FiltEST_VTIFile() = FiltEST_VTIFile("ZYX", "mm", 3, [0.0,0.0,0.0], 0.0, (String => DataArray)[], [])
 
-
+# add DataArray to FiltEST_VTI-File
 function add_data(vti::FiltEST_VTIFile, name::String, vd::DataArray)
 
-		# add names in order of addition
+		# remember names in order of addition
 		push!(vti.dataorder, name)
 
 		# add DataArray to dict
@@ -80,26 +82,24 @@ end
 function get_material_count(vti::FiltEST_VTIFile)
 
 	# access material data
-	# TODO: use try/catch for file handling
-	#try
-		materialdata = vti.voxeldata["Material"].data
-	#catch e
-	#	error(e)
-	#end
+	materialdata = vti.voxeldata["Material"].data
 
-	# count voxels
+	# create list of materials and their number of voxels
 	materials = Dict()
 
+	# count voxels
 	for voxel in materialdata
 		name = MtName[voxel]
 		if haskey(materials, name)
-			materials[name] = materials[name] + 1
+			# material is already in list
+			materials[name] +=  1
 		else
+			# add new material to list
 			push!(materials, name, 1)
 		end
 	end
 
-	# {"Fluid"=>12345, "Solid"=>4321}
+	# returns {"Fluid"=>12345, "Solid"=>4321}
 	return materials	
 end
 
@@ -107,6 +107,7 @@ end
 # write FiltEST-XML-header
 function write_FiltEST_header(vti::FiltEST_VTIFile, file::IOStream)
 
+	# get list of materials and their voxel count
 	materials = get_material_count(vti)
 
 	write(file, "<FiltEST>
@@ -116,6 +117,7 @@ function write_FiltEST_header(vti::FiltEST_VTIFile, file::IOStream)
 	<Dimension>$(vti.dimension)</Dimension>
 	<MaterialCount>$(length(materials))</MaterialCount>\n")
 	
+	# count total number of voxels
 	totalvoxelcount = 0
 
 	for material in materials
@@ -132,16 +134,14 @@ function write_FiltEST_header(vti::FiltEST_VTIFile, file::IOStream)
 
 end
 
-function g(t::DataType)
-	(t==Uint16)? "UInt16" : t
-end
-
 
 # write (compressed) voxel data
 function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 
-	# get extents of data
+	# first data to be written (usually "Material")
 	primarydata = vti.voxeldata[vti.dataorder[1]]
+
+	# get extents of data
 	wholeextent = size(primarydata.data)
 
 	# write dimensions of data
@@ -149,17 +149,20 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 	<Piece Extent="0 $(wholeextent[1]) 0 $(wholeextent[2]) 0 $(wholeextent[3])">
 		<CellData>\n""")
 
-	# in bytes
-	const blocksize = 32768
-	offset = 0
+	# block size for compression
+	const blocksize = 32768 # bytes
+
+	# offset in data
+	offset = 0 # bytes
 
 	# write tags for all DataArrays
 	for name in vti.dataorder
 
+		# get DataArray
 		dataarray = vti.voxeldata[name]
 
 		# write tag
-		write(file, """\t\t\t<DataArray type="$(g(dataarray.datatype))" Name="$(name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
+		write(file, """\t\t\t<DataArray type="$(stringfromtype[dataarray.datatype])" Name="$(name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
 
 		# calculate data size in bytes
 		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
@@ -226,23 +229,16 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 	for name in vti.dataorder
 		dataarray = vti.voxeldata[name]
 		if zipVTI
-			# write head in UInt32 (==unsigned int)
-			## datasize = num_elements*elementsize = NVoxel*sizeof(UInt16)
-
 			# write number of blocks
-			#println("$name $(dataarray.numberofblocks)")
 			write(file, uint32(dataarray.numberofblocks))
 
 			# write block size before compression
 			write(file, uint32(blocksize))
 
 			# write last block size
-			#println("$name $(dataarray.lastblocksize)")
 			write(file, uint32(dataarray.lastblocksize))
 
 			# write sizes of compressed blocks
-			#println("comp block sizes $name")
-			#println(dataarray.compressedblocksizes)
 			write(file, dataarray.compressedblocksizes)
 
 			# write compressed data
@@ -323,10 +319,8 @@ function readentity(entities, entity)
 	end
 end
 
-function read_FiltEST_VTI(file, vti)
-	#header = readuntil(file, delim)
-	#line = readline(file)
-	#println(line)
+function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
+
 	if readline(file) != """<?xml version="1.0"?>\n"""
 		error("error reading vti file!")
 	elseif readline(file) != """<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">\n"""
@@ -350,8 +344,7 @@ function read_FiltEST_VTI(file, vti)
 	readopentag(readline(file), "Piece")
 	readopentag(readline(file), "CellData")
 
-	typefromstring = {"UInt16" => Uint16,
-	"Float64" => Float64}
+
 
 	line = readline(file)
 	while !readclosetag(line, "CellData")
@@ -408,21 +401,22 @@ function read_FiltEST_VTI(file, vti)
 end
 
 
-# read FiltEST-VTIFile
+# read FiltEST-VTI-File from disk
 function read_file(filename)
 
-	# 
+	# create empty FiltEST-VTI object to be filled
 	vti = FiltEST_VTIFile()
 
-	# open file
+	# open file to be read
 	file = open(filename, "r")
-	#println(readall(file))
-	# read VTI-XML-header
-	read_FiltEST_VTI(file, vti)
+
+	# parse FiltEST-VTI-File
+	parse_FiltEST_VTI(file, vti)
 
 	# close file
 	close(file)
 
+	# return filled FiltEST-VTI object
 	return vti
 
 end
