@@ -1,6 +1,6 @@
 using FiltEST_VTI
 using SaveK
-import Zlib
+#import Zlib
 
 # TEST type mt
 # FiltEST expects UInt16 for material data (at least as data type in XML)
@@ -53,6 +53,28 @@ close(vtireffile)
 close(vtitestfile)
 close(solreffile)
 close(soltestfile)
+
+println("TEST parsing of XML tags")
+@test readtagpair("""\t<Date>Di 21 Apr 11:35:57 2015</Date>""", "Date") == "Di 21 Apr 11:35:57 2015"
+@test readtagpair("""\t\t<Date></Date>""", "Date") == ""
+@test readtagpair("""\t\t<test></test>""", "Date") == false
+@test readopentag("""\t <Material>""", "Material") == true
+@test readopentag("""\t <Materials>""", "Material") == false
+@test readopentag("""<Piece Extent="0 78 0 24 0 24">""", "Piece") == """Extent="0 78 0 24 0 24\""""
+@test readopentag("""\t<DataArray type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/>""", "DataArray") == """type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/"""
+@test readclosetag("""\t </Material>""", "Material") == true
+@test readclosetag("""\t <Material>""", "Material") == false
+@test readclosetag("""\t </Material>""", "Materials") == false
+@test readclosetag("""\t </Date>""", "Material") == false
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/""", "Name") == "Material"
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/""", "type") == "UInt16"
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/""", "offset") == "0"
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0\"""", "offset") == "0"
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="" offset="0"/""", "format") == ""
+@test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/""", "Type") == false
+
+
+
 
 println("TEST reading of FiltEST-VTI-File")
 

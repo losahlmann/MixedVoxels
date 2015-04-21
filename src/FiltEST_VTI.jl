@@ -2,8 +2,7 @@ module FiltEST_VTI
 
 import Zlib
 
-export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file, read_file
-
+export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file, read_file, readtagpair, readopentag, readclosetag, readentity
 
 
 typefromstring = Dict{String, DataType}({
@@ -173,8 +172,6 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 			dataarray.datacompressed = []
 			dataarray.compressedblocksizes = []
 
-			# TODO: Int64
-
 			# chop data into blocks
 			dataarray.numberofblocks = ifloor(datasize/blocksize)
 
@@ -215,6 +212,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 			# count bytes of head for offset
 			offset += (3+length(dataarray.compressedblocksizes))*sizeof(Uint32)
 		else
+			# count uncompressed data bytes
 			offset += datasize + 1
 		end
 	end
@@ -224,10 +222,14 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 		</Piece>
 	</ImageData>
 	<AppendedData encoding="raw">_""")
+	# the underscore at the beginning of the data is necessary
 
 	# write data of all DataArrays
 	for name in vti.dataorder
+
+		# get DataArray
 		dataarray = vti.voxeldata[name]
+
 		if zipVTI
 			# write number of blocks
 			write(file, uint32(dataarray.numberofblocks))
@@ -259,7 +261,7 @@ end
 # write FiltEST-VTIFile
 function write_file(vti::FiltEST_VTIFile, filename, zipVTI::Bool)
 
-	# TODO: try/catch
+	# TODO: try/catch for file handling
 
 	# open file
 	file = open(filename, "w")
@@ -286,7 +288,7 @@ end
 
 # TODO: if no match
 function readtagpair(line, tag)
-	m = match(Regex("<$tag>(.+)<\/$tag>"), line)
+	m = match(Regex("<$tag>(.*)<\/$tag>"), line)
 	if m == nothing
 		return false
 	else
@@ -295,7 +297,6 @@ function readtagpair(line, tag)
 end
 
 function readopentag(line, tag)
-	#print(line)
 	m = match(Regex("<$(tag)(?: (.+))?>"), line)
 	if m == nothing
 		return false
@@ -311,7 +312,7 @@ function readclosetag(line, tag)
 end
 
 function readentity(entities, entity)
-	m = match(Regex("$(entity)=\"([^\"]+)\""), entities)
+	m = match(Regex("$(entity)=\"([^\"]*)\""), entities)
 	if m == nothing
 		return false
 	else

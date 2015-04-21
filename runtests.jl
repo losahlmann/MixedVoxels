@@ -5,10 +5,10 @@ using Lint
 include("src/utils.jl")
 
 
-tests = ["test/MixedVoxels_test.jl",
-			"test/rotated_filter_test.jl",
-			"test/Permeability_test.jl",
-			"test/FiltEST_VTI_test.jl"]
+tests = ["test/Permeability_test.jl",
+			"test/MixedVoxels_test.jl",
+			"test/FiltEST_VTI_test.jl",
+			"test/rotated_filter_test.jl"]
 
 lints = ["rotated_filter.jl",
 			"src/FiltEST_VTI.jl",
