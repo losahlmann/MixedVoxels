@@ -2,7 +2,9 @@ module FiltEST_VTI
 
 import Zlib
 
-export Mt, Material, DataArray, FiltEST_VTIFile, add_data, write_file, read_file, readtagpair, readopentag, readclosetag, readentity
+export Mt, Material, DataArray, FiltEST_VTIFile
+export add_data, write_file, read_file
+export readtagpair, readopentag, readclosetag, readentity
 
 
 typefromstring = Dict{String, DataType}({
@@ -411,7 +413,7 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 		# resize data vector to actual dimensions
 		dataarray.data = reshape(dataarray.data, extents...)
 	end
-	
+
 end
 
 

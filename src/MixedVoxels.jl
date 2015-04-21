@@ -9,19 +9,20 @@ export Geometry, Plane, add!, discretise
 abstract GeometryElement
 
 type Plane <: GeometryElement
-	n_p :: Array{Float64, 1} # outer normal
+	# outward pointing normal
+	n_p :: Array{Float64, 1}
 	d :: Float64
 end
 
 Plane() = Plane([0,0,0], 0)
 
-#type arc
+# TODO: type arc
 
 type Geometry
 	geometry_elements :: Array{GeometryElement, 1}
 	# extensions in housing coordinate sys, containing geometry
-	# test here for intersection
 	extent :: Array{Uint64, 1}
+	# discretization length
 	h :: Float64
 end
 
@@ -32,7 +33,9 @@ function add!(geom::Geometry, element::GeometryElement)
 	push!(geom.geometry_elements, element)
 end
 
-# intersect a plane with the einheits voxel
+
+
+# intersect plane with unit cube
 function intersection_points(plane::Plane)
 	
 	intersectionpoints = (Array{Float64,1})[]
@@ -46,70 +49,67 @@ function intersection_points(plane::Plane)
 	end
 
 	# consider each corner (x,y,z) in {0,1}^3
-	for z in (0, 1)
-		for y in (0, 1)
-			for x in (0, 1)
-				# corner
-				corner = [x, y, z]
+	for z in (0, 1), y in (0, 1), x in (0, 1)
+		# corner
+		corner = [x, y, z]
 
-				# check if corner is in plane and plane inside the voxel
-				if equalszero(dot(plane.n_p, corner) - plane.d) && abs(dot(plane.n_p, [0.5,0.5,0.5]) - plane.d) < 0.5-eps
-					push!(intersectionpoints, corner)
-				end
-
-				# skip corner (1,1,1)
-				if corner == [1, 1, 1] continue end
-
-				# 3 possible edges for this corner
-				for j = 1:3
-
-					# edge direction
-					edge = [0, 0, 0]
-
-					# only consider edges in positive directions
-					if corner[j] == 1
-						continue
-					else
-						edge[j] = 1
-					end
-
-					# scalar product of plane normal and edge direction
-					denom = dot(plane.n_p, edge)
-
-					# check edge for intersection with plane
-					if equalszero(denom)
-						# edge coplanar with plane
-						lambda = -1.0
-					else
-						# intersection point = c+lambda*e
-						lambda = (plane.d - dot(plane.n_p, corner)) / denom
-					end
-
-					# test for intersection within cube
-					if eps < lambda < 1.0-eps
-						
-						# intersection
-						point = corner + lambda * edge
-
-						# add intersection point
-						push!(intersectionpoints, point)
-
-						# there's six points of intersection at maximum
-						if length(intersectionpoints) == 6
-							return intersectionpoints
-						end
-					end
-
-				end # continue with another edge
-			end
+		# check if corner is in plane and plane inside the voxel
+		if equalszero(dot(plane.n_p, corner) - plane.d) && abs(dot(plane.n_p, [0.5,0.5,0.5]) - plane.d) < 0.5-eps
+			push!(intersectionpoints, corner)
 		end
+
+		# skip corner (1,1,1)
+		if corner == [1, 1, 1] continue end
+
+		# 3 possible edges for this corner
+		for j = 1:3
+
+			# edge direction
+			edge = [0, 0, 0]
+
+			# only consider edges in positive direction
+			if corner[j] == 1
+				continue
+			else
+				edge[j] = 1
+			end
+
+			# scalar product of plane normal and edge direction
+			denom = dot(plane.n_p, edge)
+
+			# check edge for intersection with plane
+			if equalszero(denom)
+				# edge coplanar with plane
+				lambda = -1.0
+			else
+				# intersection point = c+lambda*e
+				lambda = (plane.d - dot(plane.n_p, corner)) / denom
+			end
+
+			# test for intersection within cube
+			if eps < lambda < 1.0-eps
+				
+				# intersection
+				point = corner + lambda * edge
+
+				# add intersection point
+				push!(intersectionpoints, point)
+
+				# there's six points of intersection at maximum
+				if length(intersectionpoints) == 6
+					return intersectionpoints
+				end
+			end
+
+		end # continue with another edge
+
 	end # continue with another corner
 
 	return intersectionpoints
 end
 
 # sort vertices of a polygon in positive (counterclockwise) direction
-# around the normal vector n_p
+# around the normal vector n
 #isless(::Array{Float64,1}, ::Array{Float64,1})
 # TODO: multiple dispatch
 function sort_vertices(vertices, n_p)
