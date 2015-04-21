@@ -92,7 +92,7 @@ function printover(io::IO, s::String, logmsg::String, color::Symbol = :color_nor
 	else
 		if logmsg != ""
 			print(io, "\u1b[1G")   # go to first column
-			print_with_color(:red, io, logmsg)
+			print_with_color(:yellow, io, logmsg)
 			print(io, "\u1b[K")    # clear the rest of the line
 			print(io, "\n")
 			print_with_color(color, io, s)

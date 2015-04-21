@@ -62,7 +62,7 @@ csvfilename = "results.csv"
 println("TEST creation of Rotated Filter VTI-File: 0.1 20 70 0.4 K_JJ")
 include("../rotated_filter.jl")
 
-vtireffile = open("test/housing_rotated_filter_ref.vti")
+#=vtireffile = open("test/housing_rotated_filter_ref.vti")
 vticreffile = open("test/housing_rotated_filter_c_ref.vti")
 vtitestfile = open(vtifilename)
 
@@ -80,7 +80,7 @@ housing_test = replace(housing_test, r"<Date>(.+)<\/Date>", "<Date></Date>")
 close(vtireffile)
 close(vticreffile)
 close(vtitestfile)
-
+=#
 housing_ref = read_file("test/housing_rotated_filter_ref.vti")
 housing_test = read_file(vtifilename)
 @test housing_ref.voxeldata["Material"].data == housing_test.voxeldata["Material"].data

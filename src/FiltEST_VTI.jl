@@ -322,38 +322,51 @@ end
 
 function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 
+	# TODO: use try/error in parse methods instead of if-construction
 	if readline(file) != """<?xml version="1.0"?>\n"""
 		error("error reading vti file!")
 	elseif readline(file) != """<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">\n"""
 		error("error reading vti file! maybe data not zipped!")
 	elseif !readopentag(readline(file), "FiltEST")
 		error("No <FiltEST>-tag")
-	elseif readtagpair(readline(file), "Date") == false
-		# no date: ignore
 	end
+
+	# if no date: ignore
+	readtagpair(readline(file), "Date")
+	
+	# read header
 	vti.traversedirection = readtagpair(readline(file), "TraverseDirection")
 	vti.units = readtagpair(readline(file), "Units")
 	vti.dimension = int64(readtagpair(readline(file), "Dimension"))
 
+	# skip material section
 	readuntil(file, "</FiltEST>\n")
 
+	# read data parameters
 	entities = readopentag(readline(file), "ImageData")
 	vti.origin = float64(split(readentity(entities, "Origin")))
 	vti.spacing = float64(split(readentity(entities, "Spacing")))[1]
 	extents = [int(split(readentity(entities, "WholeExtent")))[i] for i=(2,4,6)]
 
+	# skip tags
 	readopentag(readline(file), "Piece")
 	readopentag(readline(file), "CellData")
 
-
-
 	line = readline(file)
+	# read all DataArrays
 	while !readclosetag(line, "CellData")
+		# read entities
 		entities = readopentag(line, "DataArray")
+
+		# get data type as DataType object
 		datatype = typefromstring[readentity(entities, "type")]
+
+		# create empty DataArray
 		dataarray = DataArray(datatype,
 			int64(readentity(entities, "NumberOfComponents")),
 			(datatype)[])
+
+		# add DataArray to FiltEST-VTI
 		add_data(vti, readentity(entities, "Name"), dataarray)
 
 		line = readline(file)
@@ -369,6 +382,7 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 	# skip <AppendedData encoding="raw">_
 	readuntil(file, """<AppendedData encoding="raw">_""")
 
+	# read compressed data
 	for name in vti.dataorder
 		dataarray = vti.voxeldata[name]
 
@@ -383,22 +397,21 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 
 		# read sizes of compressed blocks
 		dataarray.compressedblocksizes = int(read(file, Uint32, dataarray.numberofblocks))
-		#println("read block sizes $(dataarray.compressedblocksizes)")
 
 		# read compressed data
 		for s in dataarray.compressedblocksizes
 			push!(dataarray.datacompressed, readbytes(file, s))
 		end
 
-		# set type of data-array
-		#dataarray.data = (dataarray.datatype)[]
+		# decompress data
 		for compressedblock in dataarray.datacompressed
 			append!(dataarray.data, reinterpret(dataarray.datatype, Zlib.decompress(compressedblock)))
 		end
 
+		# resize data vector to actual dimensions
 		dataarray.data = reshape(dataarray.data, extents...)
-
 	end
+	
 end
 
 
