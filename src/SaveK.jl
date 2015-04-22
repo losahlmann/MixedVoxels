@@ -2,7 +2,7 @@ module SaveK
 
 export saveK, readK
 
-function saveK(permeability_data, filename)
+function saveK(permeability_data::AbstractArray{Float64}, filename::String)
 
 	# create file
 	solfile = open(filename, "w")
@@ -21,7 +21,7 @@ function saveK(permeability_data, filename)
 	close(solfile)
 end
 
-function readK(filename, N)
+function readK(filename::String, N::Integer)
 
 	# open file
 	solfile = open(filename, "r")

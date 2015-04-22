@@ -16,7 +16,7 @@ typefromstring = Dict{String, DataType}({
 stringfromtype = Dict{DataType, String}({
 	Uint16 => "UInt16",
 	Float64 => "Float64"
-	})
+})
 
 
 typealias Material Uint16
@@ -41,26 +41,26 @@ MtName = Dict{Material, String}({
 
 
 # DataArray
+# TODO: Template for DataType
 type DataArray
-	# TODO: Template for DataType
 	datatype :: DataType
-	components :: Int64
+	components :: Int
 	data 
 	datacompressed :: Array{Any, 1}
 	compressedblocksizes :: Array{Uint32, 1}
-	numberofblocks :: Int64
-	lastblocksize :: Int64
+	numberofblocks :: Int
+	lastblocksize :: Int
 end
 
 DataArray() = DataArray(Any, 0, [], [], [], 0, 0)
-DataArray(datatype::DataType, components::Int64, data) = DataArray(datatype, components, data, [], [], 0, 0)
+DataArray(datatype::DataType, components::Int, data) = DataArray(datatype, components, data, [], [], 0, 0)
 
 
 # FiltEST-VTIFile
 type FiltEST_VTIFile
 	traversedirection :: String
 	units :: String
-	dimension :: Int64
+	dimension :: Int
 	origin :: Array{Float64, 1}
 	spacing :: Float64
 	voxeldata :: Dict{String, DataArray}
@@ -178,7 +178,7 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 			dataarray.numberofblocks = ifloor(datasize/blocksize)
 
 			# remainder
-			dataarray.lastblocksize = int64(datasize % blocksize)
+			dataarray.lastblocksize = int(datasize % blocksize)
 
 			if dataarray.lastblocksize != 0
 				# count last block as well
@@ -261,7 +261,7 @@ end
 
 
 # write FiltEST-VTIFile
-function write_file(vti::FiltEST_VTIFile, filename, zipVTI::Bool)
+function write_file(vti::FiltEST_VTIFile, filename::String, zipVTI::Bool)
 
 	# TODO: try/catch for file handling
 
@@ -289,7 +289,7 @@ function write_file(vti::FiltEST_VTIFile, filename, zipVTI::Bool)
 end
 
 # TODO: if no match
-function readtagpair(line, tag)
+function readtagpair(line::String, tag::String)
 	m = match(Regex("<$tag>(.*)<\/$tag>"), line)
 	if m == nothing
 		return false
@@ -298,7 +298,7 @@ function readtagpair(line, tag)
 	end
 end
 
-function readopentag(line, tag)
+function readopentag(line::String, tag::String)
 	m = match(Regex("<$(tag)(?: (.+))?>"), line)
 	if m == nothing
 		return false
@@ -309,11 +309,11 @@ function readopentag(line, tag)
 	end
 end
 
-function readclosetag(line, tag)
+function readclosetag(line::String, tag::String)
 	return ismatch(Regex("<\/$tag>"), line)
 end
 
-function readentity(entities, entity)
+function readentity(entities::String, entity::String)
 	m = match(Regex("$(entity)=\"([^\"]*)\""), entities)
 	if m == nothing
 		return false
@@ -339,7 +339,7 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 	# read header
 	vti.traversedirection = readtagpair(readline(file), "TraverseDirection")
 	vti.units = readtagpair(readline(file), "Units")
-	vti.dimension = int64(readtagpair(readline(file), "Dimension"))
+	vti.dimension = int(readtagpair(readline(file), "Dimension"))
 
 	# skip material section
 	readuntil(file, "</FiltEST>\n")
@@ -365,7 +365,7 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 
 		# create empty DataArray
 		dataarray = DataArray(datatype,
-			int64(readentity(entities, "NumberOfComponents")),
+			int(readentity(entities, "NumberOfComponents")),
 			(datatype)[])
 
 		# add DataArray to FiltEST-VTI
@@ -418,7 +418,7 @@ end
 
 
 # read FiltEST-VTI-File from disk
-function read_file(filename)
+function read_file(filename::String)
 
 	# create empty FiltEST-VTI object to be filled
 	vti = FiltEST_VTIFile()

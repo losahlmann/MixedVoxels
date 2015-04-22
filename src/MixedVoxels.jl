@@ -15,20 +15,20 @@ type Plane <: GeometryElement
 	d :: Float64
 end
 
-Plane() = Plane([0,0,0], 0)
+Plane() = Plane([0, 0, 0], 0)
 
 # TODO: type arc
 
 type Geometry
 	geometry_elements :: Vector{GeometryElement}
 	# extensions in housing coordinate sys, containing geometry
-	extent :: Vector{Uint64}
+	extent :: Vector{Int}
 	# discretization length
 	h :: Float64
 end
 
 Geometry() = Geometry(GeometryElement[], [0,0,0], 0.0)
-Geometry(extent::Array{Int64, 1}, h::Float64) = Geometry(GeometryElement[], extent, h)
+Geometry(extent::Vector{Int}, h::Float64) = Geometry(GeometryElement[], extent, h)
 
 function add!(geom::Geometry, element::GeometryElement)
 	push!(geom.geometry_elements, element)
@@ -41,10 +41,11 @@ typealias Vertices Vector{Vertex}
 # intersect plane with unit cube
 function intersection_points(plane::Plane)
 	
+	# collect intersection points
 	intersectionpoints = Vertex[]
 
 	# minimal distance of an intersection point from a cube corner
-	const eps = 1e-7
+	const min_dist = 1e-7
 
 	# no intersection possible if
 	if abs(plane.d) > sqrt(3.0)
@@ -57,7 +58,7 @@ function intersection_points(plane::Plane)
 		corner = [x, y, z]
 
 		# check if corner is in plane and plane inside the voxel
-		if equalszero(dot(plane.n_p, corner) - plane.d) && abs(dot(plane.n_p, [0.5,0.5,0.5]) - plane.d) < 0.5-eps
+		if equalszero(dot(plane.n_p, corner) - plane.d) && abs(dot(plane.n_p, [0.5,0.5,0.5]) - plane.d) < (0.5 - min_dist)
 			push!(intersectionpoints, corner)
 		end
 
@@ -90,7 +91,7 @@ function intersection_points(plane::Plane)
 			end
 
 			# test for intersection within cube
-			if eps < lambda < 1.0-eps
+			if min_dist < lambda < (1.0 - min_dist)
 				
 				# intersection
 				point = corner + lambda * edge
@@ -190,25 +191,23 @@ function volumefraction(plane::Plane, vertices::Vertices)
 
 		# continue if it's a polygon
 		if length(v_i) + length(c_i) > 2
-			#c_i = map(float64,c_i)
+			# calculate surface area
 			A = polygon_area(sort_vertices([v_i, c_i], n_i))
-			volume += A * dot(n_i, c_i[1])#flow(n_i, A, n_p, d)
+			volume += A * dot(n_i, c_i[1])
 		end
 	end
 
-	# last surface: plane cut by the cube
-	
-	# calculate surface area
+	# last surface: plane cut by the cube	
 	A = polygon_area(sort_vertices(vertices, plane.n_p))
 	
 	# calculate flow through this polygon and add to integral
-	volume += A * dot(plane.n_p, vertices[1]) #flow(n_p, A, n_p, d)
+	volume += A * dot(plane.n_p, vertices[1])
 
 	return volume/3.0
 end
 
 
-function translate(plane::Plane, voxel::Vector{Uint64}, h::Float64)
+function translate(plane::Plane, voxel::Vector{Int}, h::Float64)
 
 	#  origin of voxel
 	x0 = (voxel .- 1) * h
@@ -232,14 +231,14 @@ function inside(plane::Plane, vertex::Vertex)
 	end
 end
 
-function discretise(geom::Geometry, NOffOrigin::Vector{Int64}, mixedvoxel::Function, data1, data2)
+function discretise(geom::Geometry, NOffOrigin::Vector{Int}, mixedvoxel::Function, data1, data2)
 	Nx, Ny, Nz = geom.extent
 	# for each interior voxel
 	# TODO if iterior, compare to extension of FiltEST_VTI
 	for z in 1:Nz, y in 1:Ny, x in 1:Nx
-		cut=false
+		cut = false
 		voxel = [x, y, z]
-		pos = voxel-NOffOrigin
+		pos = voxel - NOffOrigin
 		
 		for element in geom.geometry_elements
 
@@ -256,44 +255,38 @@ function discretise(geom::Geometry, NOffOrigin::Vector{Int64}, mixedvoxel::Funct
 				data2.data[pos...] = p	
 
 				# only intersection with one geometry element!
-				cut=true
+				cut = true
 				break
 			end	
 		end
 
-		if cut
-			continue
+		# if it's not a cut voxel
+		# check if it's entirely contained in filter medium: full porous voxel
+		if !cut
+
+			# center of voxel
+			center = (voxel .- 0.5) * geom.h
+			
+			for element in geom.geometry_elements
+				if inside(element, center)
+					m, p = mixedvoxel(0.0)
+					data1.data[pos...] = m
+					data2.data[pos...] = p
+					continue
+				else
+					# else voxel is fluid
+					m, p = mixedvoxel(1.0)
+					data1.data[pos...] = m
+					data2.data[pos...] = p
+					break
+				end
+			end
 		end
 
 		# IDEE: mache angeschnittene Voxel porös und gehe dann von porösem bis zu porösem Voxel und fülle zwischendrin mit porös
 
-		# check if voxel is entirely contained in filter medium: full porous voxel
 		
-		# center of voxel
-		center = (voxel .- 0.5) * geom.h
-		#=if dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
-			# voxel is entirely contained in filter medium: full porous voxel
-			material.data[pos...] = Mt["Porous"]
-			permeability.data[pos...] = K_0
-		else
-			# else voxel is fluid
-			material.data[pos...] = Mt["Fluid"]
-			permeability.data[pos...] = 1.0
-		end=#
-		for element in geom.geometry_elements
-			if inside(element, center)
-				m, p = mixedvoxel(0.0)
-				data1.data[pos...] = m
-				data2.data[pos...] = p
-				continue
-			else
-				# else voxel is fluid
-				m, p = mixedvoxel(1.0)
-				data1.data[pos...] = m
-				data2.data[pos...] = p
-				break
-			end
-		end
+		
 	end
 end
 

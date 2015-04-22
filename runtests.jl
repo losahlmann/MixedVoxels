@@ -43,20 +43,6 @@ function runtest()
 	cubenormals = {[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]}
 	@test cubenormals[1] == [1.0,0.0,0.0]
 
-	#println(filter(x->x==Mt["Inflow"],material.data))
-	#material.data = 
-	#println(material)
-	#println(size(material.data))
-	#println(length(material.data))
-
-
-
-	#solfile = open("savedK.sol", "w")
-	#write(solfile, filter(x -> x < 1.0, permeability.data))
-	#close(solfile)
-
-
-
 end
 
 print_with_color(:green, "Running tests:\n")

@@ -10,12 +10,12 @@ println("TEST Permeability")
 
 # full voxel
 for method in mixedvoxelmethod
-	@eval @test $method[2](0, 0.1) == (Mt["Porous"], K_0)
+	@eval @test $method[2](0.0, 0.1) == (Mt["Porous"], K_0)
 end
 
 # empty voxel
 for method in mixedvoxelmethod
-	@eval @test $method[2](1, 0.1) == (Mt["Fluid"], 1.0)
+	@eval @test $method[2](1.0, 0.1) == (Mt["Fluid"], 1.0)
 end
 
 # half voxel
