@@ -62,36 +62,22 @@ csvfilename = "results.csv"
 println("TEST creation of Rotated Filter VTI-File: 0.1 20 70 0.4 K_JJ")
 include("../rotated_filter.jl")
 
-#=vtireffile = open("test/housing_rotated_filter_ref.vti")
-vticreffile = open("test/housing_rotated_filter_c_ref.vti")
-vtitestfile = open(vtifilename)
 
-housing_ref = readall(vtireffile)
-housing_cref = readall(vticreffile)
-housing_test = readall(vtitestfile)
-
-housing_ref = replace(housing_ref, r"<Date>(.+)<\/Date>", "<Date></Date>")
-housing_cref = replace(housing_cref, r"<Date>(.+)<\/Date>", "<Date></Date>")
-housing_test = replace(housing_test, r"<Date>(.+)<\/Date>", "<Date></Date>")
-
-@test housing_ref == housing_cref
-@test housing_ref == housing_test
-
-close(vtireffile)
-close(vticreffile)
-close(vtitestfile)
-=#
 housing_ref = read_file("test/housing_rotated_filter_ref.vti")
+housing_c_ref = read_file("test/housing_rotated_filter_c_ref.vti")
 housing_test = read_file(vtifilename)
 @test housing_ref.voxeldata["Material"].data == housing_test.voxeldata["Material"].data
-@test housing_ref.voxeldata["Permeability"].data == housing_test.voxeldata["Permeability"].data
+@test housing_c_ref.voxeldata["Material"].data == housing_test.voxeldata["Material"].data
+@test_approx_eq_eps housing_ref.voxeldata["Permeability"].data housing_test.voxeldata["Permeability"].data 1e-10
+@test_approx_eq_eps housing_c_ref.voxeldata["Permeability"].data housing_test.voxeldata["Permeability"].data 1e-10
+
 
 savedK_ref = readK("test/savedK_rotated_filter_ref.sol", 2434)
 savedK_cref = readK("test/savedK_rotated_filter_c_ref.sol", 2434)
 savedK_test = readK(solfilename, 2434)
 
-@test savedK_ref == savedK_test
-@test savedK_ref == savedK_cref
+@test_approx_eq_eps savedK_ref savedK_cref 1e-12
+@test_approx_eq_eps savedK_ref savedK_test 1e-12
 
 rm(vtifilename)
 rm(solfilename)
