@@ -4,7 +4,7 @@ module ProgressBar
 # handling older Julia version's syntax
 using Compat
 
-export Progress, next!, cancel, @showprogress
+export Progress, next!, cancel
 
 type Progress
 	n::Int
@@ -146,62 +146,6 @@ function showprogress_process_expr(node, metersym)
 	else
 		# process each subexpression recursively
 		Expr(node.head, [showprogress_process_expr(a, metersym) for a in node.args]...)
-	end
-end
-
-macro showprogress(args...)
-	if length(args) < 1
-		throw(ArgumentError("@showprogress requires at least one argument."))
-	end
-	progressargs = args[1:end-1]
-	loop = args[end]
-	metersym = gensym("meter")
-	if isa(loop, Expr) && loop.head === :for
-		@assert length(loop.args) == 2
-		loopassign = loop.args[1]
-		@assert loopassign.head == :(=)
-		@assert length(loopassign.args) == 2
-		return quote
-			iterable = $(esc(loopassign.args[2]))
-			$(esc(metersym)) = Progress(length(iterable), $([esc(arg) for arg in progressargs]...))
-			for $(esc(loopassign.args[1])) in iterable
-				rv = $(esc(showprogress_process_expr(loop.args[2], metersym)))
-				$(next!)($(esc(metersym)))
-				rv
-			end
-		end
-	elseif isa(loop, Expr) && loop.head === :comprehension
-		@assert length(loop.args) == 2
-		loopassign = loop.args[2]
-		@assert loopassign.head == :(=)
-		@assert length(loopassign.args) == 2
-		return quote
-			iterable = $(esc(loopassign.args[2]))
-			$(esc(metersym)) = Progress(length(iterable), $([esc(arg) for arg in progressargs]...))
-			[begin
-				 rv = $(esc(showprogress_process_expr(loop.args[1], metersym)))
-				 $(next!)($(esc(metersym)))
-				 rv
-			 end
-			 for $(esc(loopassign.args[1])) in iterable]
-		end
-	elseif isa(loop, Expr) && loop.head === :typed_comprehension
-		@assert length(loop.args) == 3
-		loopassign = loop.args[3]
-		@assert loopassign.head == :(=)
-		@assert length(loopassign.args) == 2
-		return quote
-			iterable = $(esc(loopassign.args[2]))
-			$(esc(metersym)) = Progress(length(iterable), $([esc(arg) for arg in progressargs]...))
-			$(loop.args[1])[begin
-				 rv = $(esc(showprogress_process_expr(loop.args[2], metersym)))
-				 $(next!)($(esc(metersym)))
-				 rv
-			 end
-			 for $(esc(loopassign.args[1])) in iterable]
-		end
-	else
-		throw(ArgumentError("Final argument to @showprogress must be a for loop or comprehension."))
 	end
 end
 

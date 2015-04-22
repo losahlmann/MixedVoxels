@@ -42,7 +42,6 @@ progressbar = ProgressBar.Progress(n+2, 1, "Simulate rotated filter... ", 30)
 for Phi_0_ in 𝚽_0_, phi in 𝜑
 	for theta in 𝜃, h in dVoxel, method in methods[h]
 
-		# TODO: display current parameters, needs change of ProgressMeter.jl
 		# update progress bar
 		message = "$Phi_0_ $phi $theta $h $method"
 		ProgressBar.next!(progressbar, message)
@@ -56,7 +55,6 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		phi_rad = deg2rad(phi)
 
 		# set method for treatment of mixed voxels
-		#mixedvoxel = mixedvoxelmethod[method]
 		function mixedvoxel(xi)
 			if xi > 1-eps
 				return Mt["Fluid"], 1.0
@@ -115,7 +113,6 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# filter is limited by two planes
 		geom = Geometry([Nx,Ny,Nz], h)
 
-
 		# center/pivot filter medium
 		pivot = 0.5 * [L_x, L_y, L_z]
 
@@ -130,82 +127,17 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		d1 = dot(m1, n_p)
 		d2 = dot(m2, -n_p)
 
+		# add planes to geometry
 		plane1 = Plane(n_p, d1)
 		plane2 = Plane(-n_p, d2)
 
 		add!(geom, plane1)
 		add!(geom, plane2)
 
+		# generate voxels
 		discretise(geom, NOffOrigin, mixedvoxel,
 			housing.voxeldata["Material"],
 			housing.voxeldata["Permeability"])
-
-		# determine material and permeability for each interior voxel
-		# TODO: Reihenfolge?
-		# cf. origin
-		#=for z in 1:Nz, y in 1:Ny, x in 1:Nx
-			xyz = [x,y,z]
-
-			# origin of voxel
-			x0 = (xyz .- 1) * h
-
-			# center of voxel
-			center = (xyz .- 0.5) * h
-
-			pos = xyz - NOffOrigin
-
-			# transform plane into voxel coordinate system (einheitsvoxel)
-			# distance between voxel origin and plane, divided by voxel length
-			dist1 = (dot(x0, n_p) - d1) / h
-			dist2 = (dot(x0, n_p) - d2) / h
-
-			# intersect Voxel with first and second plane
-			for (d, invert) in ((dist1, false), (dist2, true))
-
-				# "-" because plane is moved against normal direction
-				intersectionpoints = intersection_points(n_p, -d)
-
-				# treat mixed voxels
-				if length(intersectionpoints) > 0
-
-					# calculate volume fraction
-					if invert
-						# volume on opposite normal side
-						xi = volumefraction(intersectionpoints, n_p, -d)
-					else
-						xi = 1 - volumefraction(intersectionpoints, n_p, -d)
-					end
-
-					if xi > 1 - eps
-						# fluid voxel
-						material.data[pos...] = Mt["Fluid"]
-						permeability.data[pos...] = 1.0
-						break
-					elseif xi > eps
-						# mixed porous voxel
-						m, p = mixedvoxel(xi, Phi_0_)
-						material.data[pos...] = m
-						permeability.data[pos...] = p
-						break
-					else
-						# full porous voxel
-						material.data[pos...] = Mt["Porous"]
-						permeability.data[pos...] = K_0
-						break
-					end
-				elseif dot(center, n_p) - d1 < 0 && dot(center, n_p) - d2 > 0
-					# voxel is entirely contained in filter medium: full porous voxel
-					material.data[pos...] = Mt["Porous"]
-					permeability.data[pos...] = K_0
-				else
-					# else voxel is fluid
-					material.data[pos...] = Mt["Fluid"]
-					permeability.data[pos...] = 1.0
-				end
-			end			
-		end=#
-
-
 
 
 		# write FiltEST-VTI-File
@@ -224,7 +156,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 
 		# do simulation in FiltEST
 		if runFiltEST == false
-			#ProgressBar.next!(progressbar)
+			# continue with generation of VTI for next parameter set
 			continue
 		end
 
@@ -346,7 +278,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PNG("Phi_0_$(Phi_0_)_𝜑$(phi).pdf", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PNG("Phi_0_$(Phi_0_)_𝜑$(phi).png", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
@@ -364,8 +296,6 @@ if writetable == true && tablefilename != ""
 	# write header
 	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $𝜇, density = $𝜌\n" * "="^20)
 
-	# strip first line "10x2 DataFrame"
-	#write(tablefile, replace(string(table),r"^[^\n]+\n","",1))
 	# write full table in Markdown style, not only chunks, without header
 	DataFrames.showall(tablefile, table, false, symbol("Row"), false)
 
