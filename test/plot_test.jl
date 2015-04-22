@@ -44,11 +44,37 @@ end
 # plot
 p = Gadfly.plot(layers,
 	Gadfly.Scale.color_discrete_manual(colors2...),
+	#Gadfly.Scale.x_continuous(minvalue=90, maxvalue=30),
+	Gadfly.Theme(grid_color=Gadfly.color("\#888888")),
+	#Gadfly.Guide.xticks(ticks=[1:10]),
 	Gadfly.Guide.xlabel("𝜃"),
 	Gadfly.Guide.ylabel("pressuredrop \\Delta p"),
 	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n \\phi = $phi"))
 
 # save image to file
 # TODO: in PGF: deaktiviere Font-Wahl, text momentan in $\text{}$
+# \definecolor{mycolorD0D0E0}{rgb}{0.5,0.5,0.5}
+# reduziere y Komponente in Titel um ihn nach oben zu verschieben
 image = Gadfly.PGF("Phi_0_$(Phi_0_)_phi_$(phi).tex", 12Gadfly.cm, 7.5Gadfly.cm)
 Gadfly.draw(image, p)
+
+file = open("Phi_0_$(Phi_0_)_phi_$(phi).tex","r")
+tex = readall(file)
+close(file)
+file = open("Phi_0_$(Phi_0_)_phi_$(phi).tex","w")
+# ersetze "\selectfont" durch ""
+tex = replace(tex, "\\selectfont", "")
+# ersetze "\fontspec{PT Sans Caption}" durch ""
+tex = replace(tex, "\\fontspec{PT Sans Caption}", "")
+# ersetze "\fontspec{PT Sans}" durch ""
+tex = replace(tex, "\\fontspec{PT Sans}", "")
+# "text=mycolor6C606B," durch ""
+tex = replace(tex, "text=mycolor6C606B,", "")
+# "text=mycolor4C404B," durch ""
+tex = replace(tex, "text=mycolor4C404B,", "")
+# "text=mycolor564A55," durch ""
+tex = replace(tex, "text=mycolor564A55,", "")
+# "text=mycolor362A35," durch ""
+tex = replace(tex, "text=mycolor362A35,", "")
+write(file, tex)
+close(file)
