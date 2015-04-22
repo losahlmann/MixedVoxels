@@ -44,3 +44,5 @@
 !*_ref.sol
 *.fest
 results.txt
+test/*.tex
+test/*.pdf

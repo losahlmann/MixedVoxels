@@ -16,6 +16,15 @@ function K_JJ(xi, Phi_0_)
 	end
 end
 
+function K_KC(xi, Phi_0_)
+	if xi == 1
+		return Mt["Fluid"], 1.0
+	else
+		K = K_0 / (1.0 - xi)^2 * (Phi_0_ / (1 - Phi_0_) * xi + 1.0)^3
+		return Mt["Porous"], K
+	end
+end
+
 function fill(xi, Phi_0_)
 	if xi == 1
 		return Mt["Fluid"], 1.0

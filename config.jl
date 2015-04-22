@@ -34,8 +34,8 @@ const 𝜑 = [0, 10]#[0, 10, 20]
 
 #
 const methods = {
-	0.4 => ["K_JJ", "K_xi", "fill", "remove"],
-	0.1 => ["fill", "remove"]
+	0.4 => ["K_JJ", "K_KC", "K_xi", "fill", "remove", "midpoint"],
+	0.1 => ["fill", "remove", "midpoint"]
 }
 
 # compress VTI-file?
