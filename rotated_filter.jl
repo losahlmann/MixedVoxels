@@ -211,8 +211,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		m = match(r"PressureDrop: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", filtest_output)
 		pressuredrop = float64(m.captures[1])
 
-		# TODO: extract runtime of FiltEST
-		# cat flowSummary.fest  | grep "Total Solver runtime" >> ../results.txt
+		# extract runtime of FiltEST
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
 		FiltEST_runtime = float64(m.captures[1])
 		

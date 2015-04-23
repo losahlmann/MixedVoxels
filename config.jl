@@ -29,7 +29,7 @@ const NInlet = 4
 const NOutlet = 4
 
 # read input parameters
-const 𝜃 = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40, 35]
+const 𝜃 = [90, 85, 80, 75, 70, 65, 60, 55, 50, 45, 40]
 const 𝜑 = [0, 10, 20, 30, 40, 45]
 
 #
