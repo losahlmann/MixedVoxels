@@ -278,7 +278,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		
 		# save plot
 		# TODO: PGF
-		image = Gadfly.PNG("Phi_0_$(Phi_0_)_𝜑$(phi).png", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PNG("results/Phi_0_$(Phi_0_)_𝜑$(phi).png", 12Gadfly.cm, 7.5Gadfly.cm)
 		Gadfly.draw(image, p)
 		#Gadfly.finish(image)
 	end
@@ -294,7 +294,7 @@ if writetable == true && tablefilename != ""
 	tablefile = open(tablefilename, "w")
 
 	# write header
-	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $𝜇, density = $𝜌\n" * "="^20)
+	write(tablefile, "Rotated Filter (dFilter = $dFilter, K_0 = $K_0) for fluid with viscosity = $𝜇, density = $𝜌\n" * "="^20 * "\n")
 
 	# write full table in Markdown style, not only chunks, without header
 	DataFrames.showall(tablefile, table, false, symbol("Row"), false)
