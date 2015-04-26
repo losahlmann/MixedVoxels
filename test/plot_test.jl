@@ -5,7 +5,7 @@ Phi_0_ = 0.1
 phi = 10
 
 # read results
-table = DataFrames.readtable("results_good.csv")
+table = DataFrames.readtable("results_julia1loecher.csv")
 
 # select subset
 subset = table[DataFrames.array(table[:Phi_0_] .== Phi_0_, 0) & DataFrames.array(table[:phi] .== phi, 0), :]
@@ -45,17 +45,17 @@ end
 p = Gadfly.plot(layers,
 	Gadfly.Scale.color_discrete_manual(colors2...),
 	#Gadfly.Scale.x_continuous(minvalue=90, maxvalue=30),
-	Gadfly.Theme(grid_color=Gadfly.color("\#888888")),
+	Gadfly.Theme(grid_color=Gadfly.color("\#888888"),
+					panel_stroke=Gadfly.color("\#888888")),
 	#Gadfly.Guide.xticks(ticks=[1:10]),
+	Gadfly.Guide.colorkey(""),
 	Gadfly.Guide.xlabel("𝜃"),
-	Gadfly.Guide.ylabel("pressuredrop \\Delta p"),
-	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n \\phi = $phi"))
+	Gadfly.Guide.ylabel("pressuredrop Delta p"),
+	Gadfly.Guide.title("Rotated Filter: Permeability Scaling for mixed Voxels\n phi = $phi"))
 
 # save image to file
-# TODO: in PGF: deaktiviere Font-Wahl, text momentan in $\text{}$
-# \definecolor{mycolorD0D0E0}{rgb}{0.5,0.5,0.5}
 # reduziere y Komponente in Titel um ihn nach oben zu verschieben
-image = Gadfly.PGF("Phi_0_$(Phi_0_)_phi_$(phi).tex", 12Gadfly.cm, 7.5Gadfly.cm)
+image = Gadfly.PGF("Phi_0_$(Phi_0_)_phi_$(phi).tex", 14.7Gadfly.cm, 9.2Gadfly.cm)
 Gadfly.draw(image, p)
 
 file = open("Phi_0_$(Phi_0_)_phi_$(phi).tex","r")
@@ -68,6 +68,8 @@ tex = replace(tex, "\\selectfont", "")
 tex = replace(tex, "\\fontspec{PT Sans Caption}", "")
 # ersetze "\fontspec{PT Sans}" durch ""
 tex = replace(tex, "\\fontspec{PT Sans}", "")
+# ersetze "\fontsize{2.82mm}{3.39mm}"
+tex = replace(tex, r"\\fontsize{\d+.?\d+mm}{\d+.?\d+mm}", "")
 # "text=mycolor6C606B," durch ""
 tex = replace(tex, "text=mycolor6C606B,", "")
 # "text=mycolor4C404B," durch ""
@@ -76,5 +78,8 @@ tex = replace(tex, "text=mycolor4C404B,", "")
 tex = replace(tex, "text=mycolor564A55,", "")
 # "text=mycolor362A35," durch ""
 tex = replace(tex, "text=mycolor362A35,", "")
+# border around plot
+tex = replace(tex, "\\path [draw=mycolor888888]", "\\path [draw=mycolor888888, line width=0.4mm]")
+
 write(file, tex)
 close(file)
