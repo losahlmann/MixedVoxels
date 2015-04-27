@@ -10,7 +10,7 @@ include("src/utils.jl")
 
 # read config into global variables
 if !isdefined(:config)
-	include("config.jl")
+	include("config_rotated_filter.jl")
 end
 
 # load Gadfly only if needed
