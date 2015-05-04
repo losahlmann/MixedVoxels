@@ -34,6 +34,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(𝚽_0_[1])[],
 				method = String[],
 				xi = typeof(𝜉[1])[],
 				pressuredrop = Float64[],
+				pressuredrop_ideal = Float64[],
 				relerror = Float64[],
 				runtime = Float16[],
 				FiltEST_runtime = Float16[])
@@ -231,7 +232,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		relerror = abs((pressuredrop - pressuredrop_ideal)/pressuredrop_ideal)
 
 		# save results into table (as row)
-		DataFrames.push!(table, [Phi_0_ h method xi pressuredrop relerror runtime FiltEST_runtime])
+		DataFrames.push!(table, [Phi_0_ h method xi pressuredrop pressuredrop_ideal relerror runtime FiltEST_runtime])
 
 
 	end # inner for
