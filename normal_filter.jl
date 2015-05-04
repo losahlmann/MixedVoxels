@@ -8,11 +8,11 @@ include("src/Permeability.jl")
 include("src/utils.jl")
 
 # Exakter relativer Fehler bei Jackson-James-Skalierung
-relerrorJJ(xi, Phi_0_, n) = (1 - xi)/(n + 1 - xi) * log(1 - xi)/log(exp(0.931) * Phi_0_ * (1 - xi))
+relerrorJJ(xi, Phi_0_, n) = (1 - xi)./(n + 1 - xi) .* log(1 - xi)./log(exp(0.931) * Phi_0_ .* (1 - xi))
 
 # Exakter relativer Fehler bei Kozeny-Carman-Skalierung
 # Betrag
-relerrorKC(xi, Phi_0_, n) = -(1 - xi)/(n + 1 - xi) * ((1 - xi)/(1 + xi * Phi_0_/(1 - Phi_0_))^3 - 1)
+relerrorKC(xi, Phi_0_, n) = -(1 - xi)./(n + 1 - xi) .* ((1 - xi)./(1 + xi .* Phi_0_/(1 - Phi_0_)).^3 - 1)
 
 
 
@@ -71,8 +71,10 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		end
 
 		# calculate ideal exact pressure drop
-		u = 0.4/(L_y * L_z)
-		pressuredrop_ideal = 𝜇 * u/K_0 * (dFilter/h + (1 - xi)) * h * 1e-3
+		# velocity in mm/s
+		u = 6670/(L_y * L_z)
+		# pressure drop in kPa given by theoretical considerations
+		pressuredrop_ideal = 𝜇 * u/K_0 * (dFilter + (1 - xi) * h)
 
 		# generate housing.vti
 		
@@ -226,7 +228,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
 		FiltEST_runtime = float64(m.captures[1])
 		
-		relerror = -(pressuredrop - pressuredrop_ideal)/pressuredrop_ideal
+		relerror = abs((pressuredrop - pressuredrop_ideal)/pressuredrop_ideal)
 
 		# save results into table (as row)
 		DataFrames.push!(table, [Phi_0_ h method xi pressuredrop relerror runtime FiltEST_runtime])
@@ -253,15 +255,17 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		end
 
 		# add layers for exact relative errors
-		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorJJ(linspace(0,1)), color=["relerrorJJ"], Gadfly.Geom.line))
-		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorKC(linspace(0,1)), color=["relerrorKC"], Gadfly.Geom.line))
+		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorJJ(linspace(0,1), Phi_0_, dFilter/h), color=["relerrorJJ"], Gadfly.Geom.line)...)
+		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorKC(linspace(0,1), Phi_0_, dFilter/h), color=["relerrorKC"], Gadfly.Geom.line)...)
 
 		# plot
 		p = Gadfly.plot(layers,
 			Gadfly.Scale.color_discrete_manual(colors...),
+			Gadfly.Scale.y_continuous(minvalue=0, maxvalue=0.1),
 			Gadfly.Guide.xlabel("𝜉"),
-			Gadfly.Guide.ylabel("pressuredrop 𝚫p"),
-			Gadfly.Guide.title("Normal Filter: Permeability Scaling for mixed Voxels"))
+			Gadfly.Guide.ylabel("rel. error in 𝚫p"),
+			#Gadfly.Guide.title("Normal Filter: Permeability Scaling for mixed Voxels")
+			)
 
 		
 		# save plot
