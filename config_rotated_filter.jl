@@ -1,12 +1,16 @@
+# TODO: Parameters in flowSimInput.xml
+
 # FiltEST location
 const filtest="/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
 
 # fluid properties
-const 𝜇 = 1.81e-5 # viscosity
-const 𝜌 = 1.2 # density
+# viscosity in Pa.s
+const 𝜇 = 4.79e-2
+# density in kg/m^3
+const 𝜌 = 866.2
 
 # permeability of porous media in mm^2
-const K_0 = 7.0e-6
+const K_0 = 1e-4
 
 # solid volume fraction in porous media
 const 𝚽_0_ = [0.1, 0.2]
