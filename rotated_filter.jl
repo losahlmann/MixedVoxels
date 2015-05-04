@@ -43,7 +43,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 	for theta in 𝜃, h in dVoxel, method in methods[h]
 
 		# update progress bar
-		message = "$Phi_0_ $phi $theta $h $method"
+		message = "Do $Phi_0_ $phi $theta $h $method"
 		ProgressBar.next!(progressbar, message)
 		message = ""
 
@@ -185,6 +185,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 
 			# log error
 			message = "Error in $Phi_0_ $phi $theta $h $method"
+			ProgressBar.error(progressbar, message)
 
 			# try next parameter set
 			continue
@@ -206,6 +207,12 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# restore original STDOUT and STDERR
 		redirect_stdout(stdout)
 		redirect_stderr(stderr)
+
+		# extract first error
+		m = match(r".*ERROR: (.+)\n", filtest_output)
+		ProgressBar.error(progressbar, m.captures[1])
+		m = match(r".*ERROR: (.+)\n", filtest_error)
+		ProgressBar.error(progressbar, m.captures[1])
 
 		# extract pressure drop
 		m = match(r"PressureDrop: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", filtest_output)

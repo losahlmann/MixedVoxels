@@ -73,9 +73,9 @@ function next!(p::Progress, logmsg::String = "")
 	end
 end
 
-function next!(p::Progress, color::Symbol)
+function next!(p::Progress, logmsg::String, color::Symbol)
   p.color = color
-  next!(p)
+  next!(p, logmsg)
 end
 
 function cancel(p::Progress, msg::String = "Aborted before all tasks were completed", color = :red)
@@ -84,6 +84,11 @@ function cancel(p::Progress, msg::String = "Aborted before all tasks were comple
 		println()
 	end
 	return
+end
+
+function error(p::Progress, logmsg::String="ERROR")
+	p.counter -= 1
+	next!(p, logmsg, :red)
 end
 
 function printover(io::IO, s::String, logmsg::String, color::Symbol = :color_normal)
