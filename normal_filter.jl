@@ -72,9 +72,9 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 		# calculate ideal exact pressure drop
 		# velocity in mm/s
-		u = 6670/(L_y * L_z)
+		u = 0.4*1e6/60/(L_y * L_z)
 		# pressure drop in kPa given by theoretical considerations
-		pressuredrop_ideal = 𝜇 * u/K_0 * (dFilter + (1 - xi) * h)
+		pressuredrop_ideal = 𝜇 * 1e-3 * u/K_0 * (dFilter + (1 - xi) * h)
 
 		# generate housing.vti
 		
@@ -132,8 +132,8 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 		# position vectors of planes
 		# distances of planes from origin
-		d1 = pivot[1] - dFilter * 0.5 + h * xi
-		d2 = pivot[1] + dFilter * 0.5
+		d1 = pivot[1] - dFilter * 0.5
+		d2 = pivot[1] + dFilter * 0.5 + h * (1-xi)
 
 		# add planes to geometry
 		plane1 = Plane(-n_p, -d1)
@@ -242,7 +242,16 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 		layers = Gadfly.Layer[]
 
-		colors = [Gadfly.color(c) for c in ["\#e41a1c", "\#377eb8", "\#4daf4a", "\#984ea3", "\#ff7f00", "\#ffff33", "\#a65628", "\#f781bf"]]
+		colors2 = [Gadfly.color(c) for c in ["\#d62728", # red: 214,39,40
+									"\#1f77b4", # blue: 31,119,180
+									"\#2ca02c", # green: 44,160,44
+									"\#ff7f0e", # orange: 255,127,14
+									"\#9467bd", # purple: 148,103,189
+									"\#bcbd22", # greenish: 188,189,34
+									"\#17becf", # blueish: 23,190,207
+									"\#e377c2", # rose: 227,119,194
+									"\#8c564b", # brown: 140,86,75
+									"\#7f7f7f"]] # grey: 127,127,127
 
 		# split table into rows with same h, method
 		for plotdata in DataFrames.groupby(subset, [:h, :method])
@@ -250,7 +259,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 			push!(layers, Gadfly.layer(plotdata,
 							x ="xi",
 							y ="relerror",
-							Gadfly.Geom.point, Gadfly.Geom.line,
+							Gadfly.Geom.point,
 							color=["$(plotdata[:method][1]) $(plotdata[:h][1])"])...)
 		end
 
@@ -260,19 +269,45 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 		# plot
 		p = Gadfly.plot(layers,
-			Gadfly.Scale.color_discrete_manual(colors...),
+			Gadfly.Scale.color_discrete_manual(colors2...),
 			Gadfly.Scale.y_continuous(minvalue=0, maxvalue=0.1),
 			Gadfly.Guide.xlabel("𝜉"),
 			Gadfly.Guide.ylabel("rel. error in 𝚫p"),
 			#Gadfly.Guide.title("Normal Filter: Permeability Scaling for mixed Voxels")
+			Gadfly.Theme(grid_color=Gadfly.color("\#888888"),
+					panel_stroke=Gadfly.color("\#888888"))
 			)
 
 		
 		# save plot
-		# TODO: PGF
-		image = Gadfly.PNG("results/Phi_0_$(Phi_0_)_h$h.png", 12Gadfly.cm, 7.5Gadfly.cm)
+		image = Gadfly.PGF("results/Phi_0_$(Phi_0_)_h$h.tex", 13Gadfly.cm, 8.125Gadfly.cm)
 		Gadfly.draw(image, p)
-		#Gadfly.finish(image)
+
+		file = open("results/Phi_0_$(Phi_0_)_h$h.tex","r")
+		tex = readall(file)
+		close(file)
+		file = open("results/Phi_0_$(Phi_0_)_h$h.tex","w")
+		# ersetze "\selectfont" durch ""
+		tex = replace(tex, "\\selectfont", "")
+		# ersetze "\fontspec{PT Sans Caption}" durch ""
+		tex = replace(tex, "\\fontspec{PT Sans Caption}", "")
+		# ersetze "\fontspec{PT Sans}" durch ""
+		tex = replace(tex, "\\fontspec{PT Sans}", "")
+		# ersetze "\fontsize{2.82mm}{3.39mm}"
+		tex = replace(tex, r"\\fontsize{\d+.?\d+mm}{\d+.?\d+mm}", "")
+		# "text=mycolor4C404B," durch ""
+		tex = replace(tex, "text=mycolor4C404B,", "")
+		# "text=mycolor6C606B," durch ""
+		tex = replace(tex, "text=mycolor6C606B,", "")
+		# "text=mycolor564A55," durch ""
+		tex = replace(tex, "text=mycolor564A55,", "")
+		# "text=mycolor362A35," durch ""
+		tex = replace(tex, "text=mycolor362A35,", "")
+		# border around plot
+		tex = replace(tex, "\\path [draw=mycolor888888]", "\\path [draw=mycolor888888, line width=0.4mm]")
+		write(file, tex)
+		close(file)
+
 	end
 
 end # outer for
