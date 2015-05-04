@@ -112,16 +112,16 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		pivot = 0.5 * [L_x, L_y, L_z]
 
 		# normal vector of planes (||.|| = 1)
-		n_p = [-1, 0, 0]
+		n_p = [1, 0, 0]
 
 		# position vectors of planes
 		# distances of planes from origin
-		d1 = pivot + dFilter * 0.5 * xi * n_p
-		d2 = pivot - dFilter * 0.5 * n_p
+		d1 = pivot[1] - dFilter * 0.5 + h * xi
+		d2 = pivot[1] + dFilter * 0.5
 
 		# add planes to geometry
-		plane1 = Plane(n_p, d1)
-		plane2 = Plane(-n_p, d2)
+		plane1 = Plane(-n_p, -d1)
+		plane2 = Plane(n_p, d2)
 
 		add!(geom, plane1)
 		add!(geom, plane2)
