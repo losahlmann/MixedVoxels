@@ -27,7 +27,7 @@ Mt = Dict{String, Material}({
 	"Porous" => 10,
 	"Inflow" => 60,
 	"Outflow" => 80,
-	"Wall" => 101
+	"Symmetry" => 101
 }) #FIXME: Symmetry, 0 no slip?
 
 MtName = Dict{Material, String}({
@@ -36,7 +36,7 @@ MtName = Dict{Material, String}({
 	10 => "Porous",
 	60 => "Inflow",
 	80 => "Outflow",
-	101 => "Wall"
+	101 => "Symmetry"
 })
 
 

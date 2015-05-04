@@ -1,6 +1,6 @@
 <ProjectInfo>
  <GeneralInfo>
-  <ProjectName>Rotated Filter</ProjectName>
+  <ProjectName>Mixed Voxels</ProjectName>
   <Dimension>3</Dimension>
   <LicenseFile>C:/Users/kirsch/Documents/filtestProLicense_kirsch_p500sms04.lic</LicenseFile>
   <ProjectPath>./flowSimInput.xml</ProjectPath>
@@ -21,7 +21,7 @@
   <NumOfInlets>1</NumOfInlets>
   <NumOfOutlets>1</NumOfOutlets>
   <Inlet0>
-   <FlowRate>0.4</FlowRate>
+   <FlowRate>0.0384</FlowRate>
   </Inlet0>
   <Outlet0>
    <Pressure>0</Pressure>
@@ -29,15 +29,15 @@
   <UseSymmetryForWalls>false</UseSymmetryForWalls>
  </HousingInfo>
  <FluidParameters>
-  <Name>Air</Name>
-  <Viscosity>1.81e-05</Viscosity>
-  <Density>1.2</Density>
+  <Name>Oil</Name>
+  <Viscosity>4.79e-2</Viscosity>
+  <Density>866.2</Density>
  </FluidParameters>
  <FilterMediaParameters>
   <Media0>
    <Name>cabinMedium</Name>
    <Type>Porous</Type>
-   <Permeability>7.0e-12</Permeability>
+   <Permeability>1e-10</Permeability>
   </Media0>
  </FilterMediaParameters>
  <SolverOptions>

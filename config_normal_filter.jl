@@ -19,7 +19,7 @@ const 𝚽_0_ = [0.1, 0.2]
 const eps = 1e-3
 
 # dimension of a voxel
-const dVoxel = [0.4, 0.1]
+const dVoxel = [0.4]
 
 # dimensions of housing
 const L_x = 26.4

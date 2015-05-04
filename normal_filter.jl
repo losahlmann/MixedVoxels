@@ -73,7 +73,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 		# calculate ideal exact pressure drop
 		# velocity in mm/s
-		u = 0.4*1e6/60/(L_y * L_z)
+		u = 0.0384*1e6/60/(L_y * L_z)
 		# pressure drop in kPa given by theoretical considerations
 		pressuredrop_ideal = 𝜇 * 1e-3 * u/K_0 * (dFilter + (1 - xi) * h)
 
@@ -103,7 +103,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		housing.spacing = h
 
 		# create data arrays
-		material = DataArray(Material, 1, Base.fill(Mt["Solid"], Nxt, Nyt, Nzt))
+		material = DataArray(Material, 1, Base.fill(Mt["Symmetry"], Nxt, Nyt, Nzt))
 
 		# TODO: Float64 vector, 6 Komponenten, aber in *.vti nur skalar? Nein
 		# permeability of wall =1, because not porous
