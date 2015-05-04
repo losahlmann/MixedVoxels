@@ -177,6 +177,11 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 			# log error
 			message = "Error in $Phi_0_ $h $method $xi"
+			ProgressBar.logerror(progressbar, message)
+
+			# extract first error
+			m = match(r".*ERROR: (.+)\n", filtest_error)
+			ProgressBar.logerror(progressbar, m.captures[1])
 
 			# try next parameter set
 			continue
@@ -215,7 +220,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 
 	# TODO: create plots, call maybe in background, so that we can already continue
 	if plot == true
-		subset = table[DataFrames.array(table[:Phi_0_] .== Phi_0_, 0) & DataFrames.array(table[:phi] .== phi, 0), :]
+		subset = table[DataFrames.array(table[:Phi_0_] .== Phi_0_, 0), :]
 
 		layers = Gadfly.Layer[]
 
@@ -225,7 +230,7 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		for plotdata in DataFrames.groupby(subset, [:h, :method])
 			# add plot layer
 			push!(layers, Gadfly.layer(plotdata,
-							x ="𝜉",
+							x ="xi",
 							y ="pressuredrop",
 							Gadfly.Geom.point, Gadfly.Geom.line,
 							color=["$(plotdata[:method][1]) $(plotdata[:h][1])"])...)
