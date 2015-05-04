@@ -4,7 +4,7 @@ module ProgressBar
 # handling older Julia version's syntax
 using Compat
 
-export Progress, next!, cancel
+export Progress, next!, cancel, logerror
 
 type Progress
 	n::Int
@@ -86,7 +86,7 @@ function cancel(p::Progress, msg::String = "Aborted before all tasks were comple
 	return
 end
 
-function error(p::Progress, logmsg::String="ERROR")
+function logerror(p::Progress, logmsg::String="ERROR")
 	p.counter -= 1
 	next!(p, logmsg, :red)
 end
