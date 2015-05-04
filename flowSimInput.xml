@@ -5,9 +5,9 @@
   <LicenseFile>C:/Users/kirsch/Documents/filtestProLicense_kirsch_p500sms04.lic</LicenseFile>
   <ProjectPath>./flowSimInput.xml</ProjectPath>
   <GeometryFormat>VXL</GeometryFormat>
-  <GeometryPath>./housing.vti</GeometryPath>
+  <GeometryPath>./results/housing.vti</GeometryPath>
   <Levels>1</Levels>
-  <OutputPath>./results/</OutputPath>
+  <OutputPath>./results</OutputPath>
   <Units>SI Units</Units>
  </GeneralInfo>
  <ModuleParams>
