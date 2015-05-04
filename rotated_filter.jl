@@ -187,6 +187,10 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 			message = "Error in $Phi_0_ $phi $theta $h $method"
 			ProgressBar.logerror(progressbar, message)
 
+			# extract first error
+			m = match(r".*ERROR: (.+)\n", filtest_error)
+			ProgressBar.logerror(progressbar, m.captures[1])
+
 			# try next parameter set
 			continue
 		end
@@ -207,12 +211,6 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 		# restore original STDOUT and STDERR
 		redirect_stdout(stdout)
 		redirect_stderr(stderr)
-
-		# extract first error
-		m = match(r".*ERROR: (.+)\n", filtest_output)
-		ProgressBar.logerror(progressbar, m.captures[1])
-		m = match(r".*ERROR: (.+)\n", filtest_error)
-		ProgressBar.logerror(progressbar, m.captures[1])
 
 		# extract pressure drop
 		m = match(r"PressureDrop: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)", filtest_output)
