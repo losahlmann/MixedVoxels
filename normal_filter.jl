@@ -7,6 +7,15 @@ import DataFrames
 include("src/Permeability.jl")
 include("src/utils.jl")
 
+# Exakter relativer Fehler bei Jackson-James-Skalierung
+relerrorJJ(xi, Phi_0_, n) = (1 - xi)/(n + 1 - xi) * log(1 - xi)/log(exp(0.931) * Phi_0_ * (1 - xi))
+
+# Exakter relativer Fehler bei Kozeny-Carman-Skalierung
+# Betrag
+relerrorKC(xi, Phi_0_, n) = -(1 - xi)/(n + 1 - xi) * ((1 - xi)/(1 + xi * Phi_0_/(1 - Phi_0_))^3 - 1)
+
+
+
 
 # read config into global variables
 if !isdefined(:config)
@@ -25,6 +34,7 @@ table = DataFrames.DataFrame(Phi_0_ = typeof(𝚽_0_[1])[],
 				method = String[],
 				xi = typeof(𝜉[1])[],
 				pressuredrop = Float64[],
+				relerror = Float64[],
 				runtime = Float16[],
 				FiltEST_runtime = Float16[])
 
@@ -59,6 +69,10 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 				return Mt["Porous"], K_0
 			end
 		end
+
+		# calculate ideal exact pressure drop
+		u = 0.4/(L_y * L_z)
+		pressuredrop_ideal = 𝜇 * u/K_0 * (dFilter/h + (1 - xi)) * h * 1e-3
 
 		# generate housing.vti
 		
@@ -212,8 +226,10 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 		m = match(r"Total Solver runtime: ([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) \(user clock\)", filtest_output)
 		FiltEST_runtime = float64(m.captures[1])
 		
+		relerror = -(pressuredrop - pressuredrop_ideal)/pressuredrop_ideal
+
 		# save results into table (as row)
-		DataFrames.push!(table, [Phi_0_ h method xi pressuredrop runtime FiltEST_runtime])
+		DataFrames.push!(table, [Phi_0_ h method xi pressuredrop relerror runtime FiltEST_runtime])
 
 
 	end # inner for
@@ -231,10 +247,14 @@ for Phi_0_ in 𝚽_0_, h in dVoxel
 			# add plot layer
 			push!(layers, Gadfly.layer(plotdata,
 							x ="xi",
-							y ="pressuredrop",
+							y ="relerror",
 							Gadfly.Geom.point, Gadfly.Geom.line,
 							color=["$(plotdata[:method][1]) $(plotdata[:h][1])"])...)
 		end
+
+		# add layers for exact relative errors
+		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorJJ(linspace(0,1)), color=["relerrorJJ"], Gadfly.Geom.line))
+		push!(layers, Gadfly.layer(x=linspace(0,1), y=relerrorKC(linspace(0,1)), color=["relerrorKC"], Gadfly.Geom.line))
 
 		# plot
 		p = Gadfly.plot(layers,
