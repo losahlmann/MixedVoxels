@@ -56,9 +56,9 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 
 		# set method for treatment of mixed voxels
 		function mixedvoxel(xi)
-			if xi > 1-eps
+			if xi > 1-𝜀
 				return Mt["Fluid"], 1.0
-			elseif xi > eps
+			elseif xi > 𝜀
 				return mixedvoxelmethod[method](xi, Phi_0_)
 			else
 				return Mt["Porous"], K_0

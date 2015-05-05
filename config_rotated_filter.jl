@@ -16,8 +16,7 @@ const K_0 = 1e-4
 const 𝚽_0_ = [0.1, 0.2]
 
 # minimum volume fraction for mixed voxel
-# account for KC, as p>1 for xi>0.989
-const eps = 5e-2
+const 𝜀 = 1e-3
 
 # dimension of a voxel
 const dVoxel = [0.4, 0.1]

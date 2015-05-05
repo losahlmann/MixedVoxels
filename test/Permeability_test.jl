@@ -1,6 +1,7 @@
 import FiltEST_VTI: Mt
 
 K_0 = 7.0e-6
+const 𝜀 = 1e-3
 
 include("../src/Permeability.jl")
 

@@ -14,7 +14,7 @@ K_0 = 7.0e-6
 𝚽_0_ = [0.1]
 
 # minimum volume fraction for mixed voxel
-eps = 1e-3
+𝜀 = 1e-3
 
 # dimension of a voxel
 dVoxel = [0.4]
@@ -59,7 +59,7 @@ solfilename = "test/savedK.sol"
 tablefilename = "results.txt"
 csvfilename = "results.csv"
 
-println("TEST creation of Rotated Filter VTI-File: 0.1 20 70 0.4 K_JJ")
+println("TEST creation of Rotated Filter VTI-File: 0.1 70 20 0.4 K_JJ")
 include("../rotated_filter.jl")
 
 
@@ -77,7 +77,7 @@ savedK_cref = readK("test/savedK_rotated_filter_c_ref.sol", 2434)
 savedK_test = readK(solfilename, 2434)
 
 @test_approx_eq_eps savedK_ref savedK_cref 1e-12
-@test_approx_eq_eps savedK_ref savedK_test 1e-12
+@test_approx_eq_eps savedK_cref savedK_test 1e-12
 
 rm(vtifilename)
 rm(solfilename)
