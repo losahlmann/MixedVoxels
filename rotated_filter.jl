@@ -175,6 +175,7 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 			# get error output
 			close(outwrite)
 			close(errorwrite)
+			filtest_output = readavailable(outread)
 			filtest_error = readavailable(errorread)
 
 			# tidy up
@@ -188,8 +189,14 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑
 			ProgressBar.logerror(progressbar, message)
 
 			# extract first error
+			m = match(r".*ERROR: (.+)\n", filtest_output)
+			if m != nothing
+				ProgressBar.logerror(progressbar, m.captures[1])
+			end
 			m = match(r".*ERROR: (.+)\n", filtest_error)
-			ProgressBar.logerror(progressbar, m.captures[1])
+			if m != nothing
+				ProgressBar.logerror(progressbar, m.captures[1])
+			end
 
 			# try next parameter set
 			continue
