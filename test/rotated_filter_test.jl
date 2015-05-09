@@ -45,9 +45,6 @@ zipVTI = true
 # do simulation or only write VTI-file?
 runFiltEST = false
 
-# plot simulation results?
-plot = false
-
 # write simulation results into files?
 writetable = false
 writeCSV = false
