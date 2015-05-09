@@ -47,9 +47,6 @@ const zipVTI = true
 # do simulation or only write VTI-file?
 const runFiltEST = true
 
-# plot simulation results?
-const plot = true
-
 # write simulation results into files?
 const writetable = true
 const writeCSV = true
