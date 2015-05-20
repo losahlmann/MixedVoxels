@@ -199,9 +199,9 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 				# convert values into bytes
 				if i == dataarray.numberofblocks
 					# last block
-					block = reinterpret(Uint8, vec(dataarray.data))[(i-1)*blocksize+1:end]
+					block = reinterpret(Uint8, [dataarray.data...])[(i-1)*blocksize+1:end]
 				else
-					block = reinterpret(Uint8, vec(dataarray.data))[(i-1)*blocksize+1:i*blocksize]
+					block = reinterpret(Uint8, [dataarray.data...])[(i-1)*blocksize+1:i*blocksize]
 				end
 
 				# compress with standard compression level
