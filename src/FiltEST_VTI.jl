@@ -8,13 +8,19 @@ export readtagpair, readopentag, readclosetag, readentity
 
 
 typefromstring = Dict{String, DataType}({
+	"Int8" => Int8,
+	"Int16" => Int16,
 	"UInt16" => Uint16,
+	"Float32" => Float32,
 	"Float64" => Float64
 })
 
 # VTI writing of data types can differ from Julia
 stringfromtype = Dict{DataType, String}({
+	Int8 => "Int8",
+	Int16 => "Int16",
 	Uint16 => "UInt16",
+	Float32 => "Float32",
 	Float64 => "Float64"
 })
 
@@ -329,23 +335,26 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 		error("error reading vti file!")
 	elseif readline(file) != """<VTKFile type="ImageData" version="0.1" byte_order="LittleEndian" compressor="vtkZLibDataCompressor">\n"""
 		error("error reading vti file! maybe data not zipped!")
-	elseif !readopentag(readline(file), "FiltEST")
-		error("No <FiltEST>-tag")
+	end
+	line = readline(file)
+	if readopentag(line, "FiltEST")
+		# if no date: ignore
+		readtagpair(readline(file), "Date")
+		
+		# read header
+		vti.traversedirection = readtagpair(readline(file), "TraverseDirection")
+		vti.units = readtagpair(readline(file), "Units")
+		vti.dimension = int(readtagpair(readline(file), "Dimension"))
+
+		# skip material section
+		readuntil(file, "</FiltEST>\n")
+		line = readline(file)
+	else
+		warn("No <FiltEST>-tag")
 	end
 
-	# if no date: ignore
-	readtagpair(readline(file), "Date")
-	
-	# read header
-	vti.traversedirection = readtagpair(readline(file), "TraverseDirection")
-	vti.units = readtagpair(readline(file), "Units")
-	vti.dimension = int(readtagpair(readline(file), "Dimension"))
-
-	# skip material section
-	readuntil(file, "</FiltEST>\n")
-
 	# read data parameters
-	entities = readopentag(readline(file), "ImageData")
+	entities = readopentag(line, "ImageData")
 	vti.origin = float64(split(readentity(entities, "Origin")))
 	vti.spacing = float64(split(readentity(entities, "Spacing")))[1]
 	extents = [int(split(readentity(entities, "WholeExtent")))[i] for i=(2,4,6)]
@@ -408,6 +417,15 @@ function parse_FiltEST_VTI(file::IOStream, vti::FiltEST_VTIFile)
 		# decompress data
 		for compressedblock in dataarray.datacompressed
 			append!(dataarray.data, reinterpret(dataarray.datatype, Zlib.decompress(compressedblock)))
+		end
+
+		# chop data in vectors
+		if dataarray.components > 1
+			b = (Array{dataarray.datatype, 1})[]
+			for i = 1:length(dataarray.data)/dataarray.components
+				push!(b, dataarray.data[(i-1)*dataarray.components+1:i*dataarray.components])
+			end
+			dataarray.data = b
 		end
 
 		# resize data vector to actual dimensions
