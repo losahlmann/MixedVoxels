@@ -3,9 +3,9 @@ include("../rel_vel_error.jl")
 println("TEST relative error in velocity field")
 
 coarsematerial = DataArray(Material, 1, Base.fill(Mt["Fluid"], 7, 3, 3))
-coarsevelocity = DataArray(Float64, 3, Base.fill([1.0,0.0,0.0], 7, 3, 3))
+coarsevelocity = DataArray(Float32, 3, Base.fill(float32([1.0,0.0,0.0]), 7, 3, 3))
 finematerial = DataArray(Material, 1, Base.fill(Mt["Fluid"], 28, 12, 12))
-finevelocity = DataArray(Float64, 3, Base.fill([1.0,0.0,0.0], 28, 12, 12))
+finevelocity = DataArray(Float32, 3, Base.fill(float32([1.0,0.0,0.0]), 28, 12, 12))
 
 coarsehousing = FiltEST_VTIFile()
 coarsehousing.origin = [-0.8, -0.4, -0.4]

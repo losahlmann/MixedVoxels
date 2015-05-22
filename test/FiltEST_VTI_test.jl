@@ -167,4 +167,5 @@ hou2 = read_file("test/hou.vti")
 @test hou.voxeldata["Velocity_mm_per_sec"].data == hou2.voxeldata["Velocity_mm_per_sec"].data
 @test hou.traversedirection == hou2.traversedirection
 @test hou.dataorder == hou2.dataorder
+@test typeof(hou.voxeldata["Permeability_mm2"].data[1,1,1]) == hou.voxeldata["Permeability_mm2"].datatype
 rm("test/hou.vti")

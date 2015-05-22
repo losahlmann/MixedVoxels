@@ -39,7 +39,8 @@ function relvelocityerrorpath(path)
 		finesetting = match(r"(.*)_0\.1", finesol).captures[1]
 		coarsesols = filter(Regex("$(finesetting)_0\.4"), files)
 		for coarsesol in coarsesols
-			relvelocityerror!(coarsesol, finesol)
+			println("do"*coarsesol)
+			relvelocityerror!(path*coarsesol, path*finesol)
 		end
 	end
 end

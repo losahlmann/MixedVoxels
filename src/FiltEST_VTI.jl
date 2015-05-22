@@ -175,9 +175,8 @@ function write_data(vti::FiltEST_VTIFile, file::IOStream, zipVTI::Bool)
 
 		# write tag
 		write(file, """\t\t\t<DataArray type="$(stringfromtype[dataarray.datatype])" Name="$(name)" NumberOfComponents="$(dataarray.components)" format="appended" offset="$offset"/>\n""")
-
 		# calculate data size in bytes
-		datasize = length(dataarray.data)*sizeof(dataarray.datatype)
+		datasize = length(dataarray.data) * dataarray.components * sizeof(dataarray.datatype)
 
 		# prepare data to be written compressed
 		if zipVTI
