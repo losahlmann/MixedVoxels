@@ -73,11 +73,7 @@ println("TEST parsing of XML tags")
 @test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="" offset="0"/""", "format") == ""
 @test readentity("""type="UInt16" Name="Material" NumberOfComponents="1" format="appended" offset="0"/""", "Type") == false
 
-
-
-
 println("TEST reading of FiltEST-VTI-File")
-
 vtireffile = read_file("test/housing_test_ref.vti")
 @test typeof(vtireffile) == FiltEST_VTIFile
 @test vtireffile.traversedirection == "ZYX"
@@ -143,3 +139,32 @@ perm = housing_ref.voxeldata["Permeability"]
 #compressed_c = b"\x78\x9c\xb3\x61\xe0\x62\x08\x60\x60\x65\x00\x00\x03\x6e\x00\x9c"
 #println("decompressed c $(Zlib.decompress(compressed_c))")
 # == Uint8[60,0,10,0,80,0,5,0]
+
+println("TEST read-write-read of FiltEST-VTI-file")
+hou = read_file("test/housing_rotated_filter_ref.vti")
+@test typeof(hou) == FiltEST_VTIFile
+write_file(hou, "test/hou.vti", true)
+hou2 = read_file("test/hou.vti")
+@test hou.voxeldata["Material"].data == hou2.voxeldata["Material"].data
+@test hou.voxeldata["Permeability"].data == hou2.voxeldata["Permeability"].data
+@test hou.traversedirection == hou2.traversedirection
+@test hou.units == hou2.units
+@test hou.dimension == hou2.dimension
+@test hou.origin == hou2.origin
+@test hou.spacing == hou2.spacing
+@test hou.dataorder == hou2.dataorder
+rm("test/hou.vti")
+
+println("TEST read-write-read of VTI-file")
+hou = read_file("test/flow_rotated_filter_test.vti")
+@test typeof(hou) == FiltEST_VTIFile
+write_file(hou, "test/hou.vti", true, false)
+hou2 = read_file("test/hou.vti")
+@test hou.voxeldata["Permeability_mm2"].data == hou2.voxeldata["Permeability_mm2"].data
+@test hou.voxeldata["Substance"].data == hou2.voxeldata["Substance"].data
+@test hou.voxeldata["Levels"].data == hou2.voxeldata["Levels"].data
+@test hou.voxeldata["Pressure_kPa"].data == hou2.voxeldata["Pressure_kPa"].data
+@test hou.voxeldata["Velocity_mm_per_sec"].data == hou2.voxeldata["Velocity_mm_per_sec"].data
+@test hou.traversedirection == hou2.traversedirection
+@test hou.dataorder == hou2.dataorder
+rm("test/hou.vti")

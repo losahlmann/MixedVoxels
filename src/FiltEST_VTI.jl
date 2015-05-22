@@ -89,7 +89,12 @@ end
 function get_material_count(vti::FiltEST_VTIFile)
 
 	# access material data
-	materialdata = vti.voxeldata["Material"].data
+	#try
+		materialdata = vti.voxeldata["Material"].data
+	#catch
+	#	warn("No Material data!")
+	#	return Dict()
+	#end
 
 	# create list of materials and their number of voxels
 	materials = Dict()
@@ -267,7 +272,7 @@ end
 
 
 # write FiltEST-VTIFile
-function write_file(vti::FiltEST_VTIFile, filename::String, zipVTI::Bool)
+function write_file(vti::FiltEST_VTIFile, filename::String, zipVTI::Bool, header::Bool=true)
 
 	# TODO: try/catch for file handling
 
@@ -281,7 +286,9 @@ function write_file(vti::FiltEST_VTIFile, filename::String, zipVTI::Bool)
 		* (zipVTI ? """ compressor="vtkZLibDataCompressor">\n""" : ">\n"))
 
 	# write FiltEST-XML-header
-	write_FiltEST_header(vti, file)
+	if header
+		write_FiltEST_header(vti, file)
+	end
 
 	# write data
 	write_data(vti, file, zipVTI::Bool)
