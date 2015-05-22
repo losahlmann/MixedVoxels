@@ -31,3 +31,15 @@ function relvelocityerror!(coarsesol, finesol)
 	write_file(coarsesolvti, coarsesol, true)
 
 end
+
+function relvelocityerror(path)
+	files = readdir(path)
+	finesols = filter(r".*_0\.1", files)
+	for finesol in finesols
+		finesetting = match(r"(.*)_0\.1", finesol).captures[1]
+		coarsesols = filter(r"finesetting_0\.4", files)
+		for coarsesol in coarsesols
+			relvelocityerror!(coarsesol, finesol)
+		end
+	end
+end
