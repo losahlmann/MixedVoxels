@@ -223,6 +223,10 @@ for Phi_0_ in 𝚽_0_, phi in 𝜑, theta in 𝜃, h in dVoxel, method in method
 	# save results into table (as row)
 	DataFrames.push!(table, [Phi_0_ phi theta h method pressuredrop runtime FiltEST_runtime])
 
+	# rename solution file
+	flow = filter(r"flow_\d.vti", readdir("results/VisualizationOutput/"))
+	mv("results/VisualizationOutput/$(flow[1])","results/VisualizationOutput/$(Phi_0_)_$(phi)_$(theta)_$(h)_$(method).vti")
+
 end # end for
 
 
