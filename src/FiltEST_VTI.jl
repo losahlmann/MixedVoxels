@@ -28,13 +28,13 @@ stringfromtype = Dict{DataType, String}({
 typealias Material Uint16
 
 Mt = Dict{String, Material}({
-	"Solid" => 0,
+	"Solid" => 0, # no-slip BC
 	"Fluid" => 5,
 	"Porous" => 10,
 	"Inflow" => 60,
 	"Outflow" => 80,
 	"Symmetry" => 101
-}) #FIXME: Symmetry, 0 no slip?
+})
 
 MtName = Dict{Material, String}({
 	0 => "Solid",

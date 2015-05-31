@@ -112,6 +112,7 @@ function intersection_points(plane::Plane)
 	return intersectionpoints
 end
 
+
 # sort vertices of a polygon in positive (counterclockwise) direction
 # around the normal vector n
 function sort_vertices(vertices::Vertices, n_p::Vector{Float64})
@@ -139,6 +140,7 @@ function sort_vertices(vertices::Vertices, n_p::Vector{Float64})
 
 	return vertices
 end
+
 
 # Gauss's shoelace formula for the area of a polygon
 # points must be ordered in positive direction (counterclockwise) around normal vector
@@ -221,7 +223,6 @@ function translate(plane::Plane, voxel::Vector{Int}, h::Float64)
 end
 
 
-
 function inside(plane::Plane, vertex::Vertex)
 	
 	if dot(vertex, plane.n_p) > plane.d
@@ -230,6 +231,7 @@ function inside(plane::Plane, vertex::Vertex)
 		return true
 	end
 end
+
 
 function discretise(geom::Geometry, NOffOrigin::Vector{Int}, mixedvoxel::Function, data1, data2)
 	Nx, Ny, Nz = geom.extent
@@ -283,10 +285,7 @@ function discretise(geom::Geometry, NOffOrigin::Vector{Int}, mixedvoxel::Functio
 			end
 		end
 
-		# IDEE: mache angeschnittene Voxel porös und gehe dann von porösem bis zu porösem Voxel und fülle zwischendrin mit porös
-
-		
-		
+		# IDEE: mache angeschnittene Voxel porös und gehe dann von porösem bis zu porösem Voxel und fülle zwischendrin mit porös	
 	end
 end
 

@@ -1,7 +1,7 @@
 # TODO: Parameters in flowSimInput.xml
 
 # FiltEST location
-const filtest="/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
+const filtest = "/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
 
 # fluid properties
 # viscosity in Pa.s
