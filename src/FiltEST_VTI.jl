@@ -33,7 +33,7 @@ Mt = Dict{String, Material}({
 	"Porous" => 10,
 	"Inflow" => 60,
 	"Outflow" => 80,
-	"Symmetry" => 101
+	"Symmetry" => 101 # symmetry BC
 })
 
 MtName = Dict{Material, String}({

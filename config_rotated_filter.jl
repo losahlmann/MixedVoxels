@@ -1,5 +1,3 @@
-# TODO: Parameters in flowSimInput.xml
-
 # FiltEST location
 const filtest = "/u/s/sahlmann/Documents/Fachpraktikum/FiltEST/filtest.sh"
 
